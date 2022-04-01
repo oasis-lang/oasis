@@ -1,0 +1,19 @@
+
+enum class TokenType {
+    LEFT_PAREN, RIGHT_PAREN,
+    COMMA, COLON, MINUS, PLUS, SLASH, STAR,
+    LBRAC, RBRAC,
+
+    // One or two character tokens.
+    BANG, BANG_EQUAL,
+    EQUAL, EQUAL_EQUAL,
+    GREATER, GREATER_EQUAL,
+    LESS, LESS_EQUAL, MOD,
+
+    // Literals.
+    IDENTIFIER, STRING, NUMBER, CHAR,
+
+    LET, PROTO, FN, FOR, IF, NIL, RETURN, TRUE, FALSE, WHILE, END, ELSE,
+
+    EOF
+}
