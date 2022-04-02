@@ -1,7 +1,7 @@
 import TokenType.*
 
 class Scanner(val source: String) {
-    private var tokens: ArrayList<Token> = ArrayList<Token>()
+    private var tokens: ArrayList<Token> = ArrayList()
     private var start: Int = 0
     private var current: Int = 0
     private var line: Int = 1
@@ -18,7 +18,11 @@ class Scanner(val source: String) {
         "false" to FALSE,
         "while" to WHILE,
         "end" to END,
-        "else" to ELSE
+        "else" to ELSE,
+        "and" to AND,
+        "or" to OR,
+        "not" to NOT,
+        "clone" to NEW
     )
 
     fun scanTokens(): List<Token> {

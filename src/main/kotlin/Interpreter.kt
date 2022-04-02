@@ -13,7 +13,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         //AtomicReference(Oasis.getGlobalInterpreter).value = this
     }
 
-    inline fun eval(expr: Expr): Any? {
+    fun eval(expr: Expr): Any? {
 //        try {
             return expr.accept(this)
   /*      } catch (e: Return) {
@@ -26,7 +26,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             throw RuntimeError(expr.line, e.toString())
         }
     */}
-    inline fun execute(stmt: Stmt) {
+    fun execute(stmt: Stmt) {
  //       try {
             stmt.accept(this)
 /*        } catch (e: Return) {
@@ -41,11 +41,11 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 */
     }
 
-    inline fun execute(stmtList: StmtList) {
+    fun execute(stmtList: StmtList) {
         executeBlock(stmtList, environment)
     }
 
-    inline fun executeBlock(stmtList: StmtList, env: Environment) {
+    fun executeBlock(stmtList: StmtList, env: Environment) {
         val previous: Environment = environment
         try {
             environment = env
@@ -86,6 +86,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         val arguments: ArrayList<Any?> = fcall.operands.map { eval(it) } as ArrayList<Any?>
         if (callee.arity() != fcall.operands.size) throw RuntimeError(fcall.line, "function call required ${callee.arity()} arguments, got ${fcall.operands.size}")
         return callee.call(this, arguments)
+    }
+
+    private fun isTruthy(thing: Any?): Boolean {
+        return thing != null && thing != false && thing != 0.0
     }
 
     override fun visitBinOp(binop: BinOp): Any? {
@@ -156,6 +160,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             TokenType.MOD -> {
                 return (left as Double) % (right as Double)
             }
+            TokenType.AND -> {
+                return isTruthy(left) && isTruthy(right)
+            }
+            TokenType.OR -> {
+                return isTruthy(left) || isTruthy(right)
+            }
             else -> throw RuntimeError(binop.line, "Invalid operator")
         }
     }
@@ -179,7 +189,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     override fun visitIfStmt(ifstmt: IfStmt) {
-        if(eval(ifstmt.expr) as Boolean) {
+        if(isTruthy(eval(ifstmt.expr))) {
             execute(ifstmt.stmtlist)
         } else {
             ifstmt.elseBody?.let { execute(it) }
@@ -187,7 +197,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     override fun visitWhileStmt(whilestmt: WhileStmt) {
-        while(eval(whilestmt.expr) as Boolean) {
+        while(isTruthy(eval(whilestmt.expr))) {
             execute(whilestmt.body)
         }
     }
@@ -215,6 +225,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         return when(val x = eval(indexer.expr)) {
             is String -> x[(eval(indexer.index) as Double).toInt()]
             is ArrayList<*> -> x[(eval(indexer.index) as Double).toInt()]
+            is OasisPrototype -> (x.get("__index") as OasisCallable).call(this, listOf(eval(indexer.index)))
             else -> throw RuntimeError(indexer.line, "Cannot index")
         }
     }
@@ -227,6 +238,14 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visitNegate(negate: Negate): Any {
         return -(eval(negate.value) as Double)
+    }
+
+    override fun visitNew(ref: New): Any? {
+        return eval(ref.expr)?.let { if(it is Cloneable) { it.javaClass.getMethod("clone").invoke(it) } else throw RuntimeError(ref.line, "Cannot clone object") }
+    }
+
+    override fun visitNot(not: Not): Any? {
+        return !isTruthy(eval(not.expr))
     }
 
 }

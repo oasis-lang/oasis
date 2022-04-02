@@ -18,7 +18,7 @@ fun constructSocket(port: Double): OasisPrototype {
             set("send", KotlinFunction1<Unit, String>{ clientSocket.getOutputStream().write(it.toByteArray())})
             set("read", KotlinFunction0{clientSocket.getInputStream().readBytes().asList()})
             set("sread", KotlinFunction0{String(clientSocket.getInputStream().readBytes())})
-            set("close", KotlinFunction0{clientSocket.close(); proto.set("accepting", false)})
+            set("close", KotlinFunction0{clientSocket.close(); set("accepting", false)})
         }
         connectionProto
     })

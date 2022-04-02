@@ -12,6 +12,8 @@ abstract class Expr(var line: Int) {
         fun visitIndexer(indexer: Indexer): T
         fun visitList(list: OasisList): T
         fun visitNegate(negate: Negate): T
+        fun visitNew(ref: New): T
+        fun visitNot(not: Not): T
     }
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
@@ -180,5 +182,24 @@ class Negate(val value: Expr, line: Int): Expr(line) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNegate(this)
     }
+}
 
+class New(val expr: Expr, line: Int): Expr(line) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitNew(this)
+    }
+
+    override fun toString(): String {
+        return "New(${expr}) at $line"
+    }
+}
+
+class Not(val expr: Expr, line: Int): Expr(line) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitNot(this)
+    }
+
+    override fun toString(): String {
+        return "Not(${expr}) at $line"
+    }
 }

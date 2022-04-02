@@ -13,7 +13,7 @@ enum class TokenType {
     // Literals.
     IDENTIFIER, STRING, NUMBER, CHAR,
 
-    LET, PROTO, FN, FOR, IF, NIL, RETURN, TRUE, FALSE, WHILE, END, ELSE,
+    LET, PROTO, FN, FOR, IF, NIL, RETURN, TRUE, FALSE, WHILE, END, ELSE, AND, NOT, OR, NEW,
 
     EOF
 }

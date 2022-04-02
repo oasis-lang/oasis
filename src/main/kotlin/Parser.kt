@@ -8,7 +8,8 @@ class Parser(private val tokens: List<Token>) {
         BANG, BANG_EQUAL,
         EQUAL, EQUAL_EQUAL,
         GREATER, GREATER_EQUAL,
-        LESS, LESS_EQUAL, MOD
+        LESS, LESS_EQUAL, MOD,
+        AND, OR
     )
 
     private fun peek(type: TokenType): Boolean {
@@ -104,6 +105,12 @@ class Parser(private val tokens: List<Token>) {
         } else if(peek(MINUS)) {
             eat(MINUS)
             result = Negate(expression(), begin)
+        } else if(peek(NEW)) {
+            eat(NEW)
+            result = New(expression(), begin)
+        } else if(peek(NOT)){
+            eat(NOT)
+            result = Not(expression(), begin)
         } else {
             error(tokens[current].line, "Invalid expression")
             println(tokens.slice(current until tokens.size))

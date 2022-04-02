@@ -1,5 +1,5 @@
 
-class OasisPrototype(var inherit: OasisPrototype?, val line: Int) {
+class OasisPrototype(var inherit: OasisPrototype?, val line: Int): Cloneable{
     private var body: HashMap<String, Any?> = HashMap()
 
     fun get(name: String): Any? {
@@ -20,5 +20,9 @@ class OasisPrototype(var inherit: OasisPrototype?, val line: Int) {
 
     override fun toString(): String {
         return globalInterpreter?.let { (get("toString") as OasisCallable).call(it, ArrayList()) } as String
+    }
+
+    override fun clone(): Any {
+        return OasisPrototype(inherit, line).let { body.map { x -> it.set(x.key, x.value) }; it }
     }
 }
