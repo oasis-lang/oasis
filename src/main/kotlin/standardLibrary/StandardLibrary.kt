@@ -5,7 +5,7 @@ import OasisPrototype
 
 var base = OasisPrototype(null, -1)
 object StandardLibrary {
-    var modules = arrayListOf( // Base modules
+    private var modules = arrayListOf( // Base modules
         io,
         string,
         time,
@@ -13,7 +13,8 @@ object StandardLibrary {
         list,
         range,
         sys,
-        hashmap
+        hashmap,
+        json
     )
 
     fun addModule(x: Module) = modules.add(x)

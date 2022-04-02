@@ -1,12 +1,9 @@
-
-class OasisPrototype(var inherit: OasisPrototype?, val line: Int): Cloneable{
-    private var body: HashMap<String, Any?> = HashMap()
+class OasisPrototype(private var inherit: OasisPrototype?, val line: Int): Cloneable{
+    var body: HashMap<String, Any?> = HashMap()
 
     fun get(name: String): Any? {
         if (body.containsKey(name)) {
-            var value = body[name]
-            if(value is OasisFunction)
-                value.closure.define("this", this) // Oh my god.
+            val value = body[name]
             return value
         } else if(inherit != null && inherit!!.body.containsKey(name)) {
             return inherit!!.body[name]
@@ -16,6 +13,8 @@ class OasisPrototype(var inherit: OasisPrototype?, val line: Int): Cloneable{
 
     fun set(name: String, value: Any?) {
         body[name] = value
+        if(value is OasisFunction)
+            value.closure.define("this", this)
     }
 
     override fun toString(): String {

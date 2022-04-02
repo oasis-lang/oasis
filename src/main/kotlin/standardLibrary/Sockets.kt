@@ -3,10 +3,10 @@ package standardLibrary
 import KotlinFunction0
 import KotlinFunction1
 import OasisPrototype
-import java.net.*;
+import java.net.*
 
 fun constructSocket(port: Double): OasisPrototype {
-    var proto = OasisPrototype(base, -1)
+    val proto = OasisPrototype(base, -1)
     proto.set("__socket", ServerSocket(port.toInt()))
     proto.set("port", port)
     proto.set("accepting", true)

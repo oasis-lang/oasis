@@ -1,6 +1,6 @@
 import TokenType.*
 
-class Scanner(val source: String) {
+class Scanner(private val source: String) {
     private var tokens: ArrayList<Token> = ArrayList()
     private var start: Int = 0
     private var current: Int = 0
@@ -39,8 +39,7 @@ class Scanner(val source: String) {
     }
 
     private fun scanToken() {
-        var c: Char = advance()
-        when(c) {
+        when(val c: Char = advance()) {
             '(' -> addToken(LEFT_PAREN)
             ')' -> addToken(RIGHT_PAREN)
             ',' -> addToken(COMMA)
@@ -53,20 +52,20 @@ class Scanner(val source: String) {
             '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
             '>' -> addToken(if (match('=')) GREATER_EQUAL else GREATER)
             '/' -> if (match('/'))
-                    while (peek() != '\n' && !isAtEnd())
-                        advance()
-                    else
-                        addToken(SLASH)
+                while (peek() != '\n' && !isAtEnd())
+                    advance()
+            else
+                addToken(SLASH)
             '[' -> addToken(LBRAC)
             ']' -> addToken(RBRAC)
-            ' ', '\r', '\t', -> null
+            ' ', '\r', '\t' -> null
             '\n' -> line++
             '"' -> string()
             '\'' -> char()
             '%' -> addToken(MOD)
             else -> if(c.isDigit())
                         number()
-                    else if(c.isLetter())
+                    else if(c.isLetter() || c == '_')
                         identifier()
                     else
                         error(line, "Unexpected character '$c'.")
@@ -74,8 +73,8 @@ class Scanner(val source: String) {
     }
 
     private fun identifier() {
-        while(peek().isDigit() || peek().isLetter()) advance()
-        var text: String = source.substring(start, current)
+        while(peek().isDigit() || peek().isLetter() || peek() == '_') advance()
+        val text: String = source.substring(start, current)
         var type: TokenType? = keywords[text]
         if(type == null) type = IDENTIFIER
         addToken(type)
@@ -84,6 +83,13 @@ class Scanner(val source: String) {
     private fun string() {
         while (peek() != '"' && !isAtEnd()) {
             if(peek() == '\n') line++
+            if(peek() == '\\') {
+                advance()
+                when(peek()) {
+                    '"', '\'', 'n', 'r', 't' -> null
+                    else -> error(line, "Invalid escape.")
+                }
+            }
             advance()
         }
         if(isAtEnd()) {
@@ -91,12 +97,16 @@ class Scanner(val source: String) {
             return
         }
         advance()
-        var value: String = source.substring(start + 1, current - 1).replace("\\r", "\r").replace("\\n", "\n")
+        val value: String = source.substring(start + 1, current - 1)
+            .replace("\\r", "\r")
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\\"", "\"")
         addToken(STRING, value)
     }
 
     private fun char() {
-        var c: Char = advance()
+        val c: Char = advance()
         if (advance() != '\'') {
             error(line, "Unterminated char literal.")
             return
@@ -140,7 +150,7 @@ class Scanner(val source: String) {
     }
 
     private fun addToken(type: TokenType, literal: Any?) {
-        var text: String = source.substring(start, current)
+        val text: String = source.substring(start, current)
         tokens.add(Token(type, text, literal, line))
     }
 

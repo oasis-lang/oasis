@@ -13,7 +13,7 @@ val io = Module("io") {
     val io = OasisPrototype(base, -1)
     val socket = OasisPrototype(base, -1)
 
-    io.set("print", KotlinFunction1<kotlin.Unit, kotlin.Any?> { z -> kotlin.io.println(z.toString()) })
+    io.set("print", KotlinFunction1<Unit, Any?> { z -> println(z.toString()) })
     io.set("read", KotlinFunction0(::readLine))
     io.set("readc", KotlinFunction0 { return@KotlinFunction0 Char(System.`in`.read()) })
     io.set("open", KotlinFunction1<String, String>{ Files.readString(Path.of(it))})

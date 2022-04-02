@@ -1,6 +1,8 @@
 import standardLibrary.StandardLibrary
 import standardLibrary.base
 
+var line: Int = 0
+
 class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     private var globals = Environment()
@@ -10,38 +12,17 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     init {
         StandardLibrary.generateLib(environment)
-        //AtomicReference(Oasis.getGlobalInterpreter).value = this
     }
 
-    fun eval(expr: Expr): Any? {
-//        try {
-            return expr.accept(this)
-  /*      } catch (e: Return) {
-            throw e
-        } catch (e: Exception )  {
-            if(e is RuntimeError) {
-                throw e
-            }
-            e.printStackTrace()
-            throw RuntimeError(expr.line, e.toString())
-        }
-    */}
+    private fun eval(expr: Expr): Any? {
+        return expr.accept(this)
+    }
     fun execute(stmt: Stmt) {
- //       try {
-            stmt.accept(this)
-/*        } catch (e: Return) {
-            throw e
-        } catch (e: Exception )  {
-            if(e is RuntimeError) {
-                throw e
-            }
-            e.printStackTrace()
-            throw RuntimeError(stmt.line, e.toString())
-        }
-*/
+        line = stmt.line
+        stmt.accept(this)
     }
 
-    fun execute(stmtList: StmtList) {
+    private fun execute(stmtList: StmtList) {
         executeBlock(stmtList, environment)
     }
 
@@ -89,7 +70,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     private fun isTruthy(thing: Any?): Boolean {
-        return thing != null && thing != false && thing != 0.0
+        if(thing == null) return false
+        if(thing == 0.0) return false
+        if(thing == false) return false
+        return true
     }
 
     override fun visitBinOp(binop: BinOp): Any? {
@@ -215,6 +199,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visitExprStmt(exprStmt: ExprStmt) {
         if(repl) {
+            repl = false
             eval(exprStmt.expr).let { if(it !is Unit) println(it) }
         } else {
             exprStmt.expr.accept(this)
@@ -244,7 +229,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         return eval(ref.expr)?.let { if(it is Cloneable) { it.javaClass.getMethod("clone").invoke(it) } else throw RuntimeError(ref.line, "Cannot clone object") }
     }
 
-    override fun visitNot(not: Not): Any? {
+    override fun visitNot(not: Not): Any {
         return !isTruthy(eval(not.expr))
     }
 

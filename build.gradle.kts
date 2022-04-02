@@ -12,6 +12,10 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    implementation("com.google.code.gson:gson:2.9.0")
+}
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "16"
 }

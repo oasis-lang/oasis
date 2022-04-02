@@ -3,7 +3,7 @@ import TokenType.*
 class Parser(private val tokens: List<Token>) {
     private var current: Int = 0
 
-    private var operators: List<TokenType> = listOf<TokenType>(
+    private var operators: List<TokenType> = listOf(
         MINUS, PLUS, SLASH, STAR,
         BANG, BANG_EQUAL,
         EQUAL, EQUAL_EQUAL,
@@ -18,7 +18,6 @@ class Parser(private val tokens: List<Token>) {
 
     private fun eat(type: TokenType): Token {
         if (!peek(type)) {
-            println(tokens)
             error(tokens[current].line, "Unexpected token ${tokens[current].lexeme}, expected ${type.name}")
             throw Exception()
         }
@@ -26,10 +25,10 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun fnDef(): Expr {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         eat(FN)
         eat(LEFT_PAREN)
-        var operands: ArrayList<Token> = ArrayList()
+        val operands: ArrayList<Token> = ArrayList()
         if (peek(IDENTIFIER)) {
             operands.add(eat(IDENTIFIER))
             while (!peek(RIGHT_PAREN)) {
@@ -38,7 +37,7 @@ class Parser(private val tokens: List<Token>) {
             }
         }
         eat(RIGHT_PAREN)
-        var body: ArrayList<Stmt> = ArrayList()
+        val body: ArrayList<Stmt> = ArrayList()
         while (!peek(END)) {
             body.add(statement())
         }
@@ -47,14 +46,14 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun proto(): Expr {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         eat(PROTO)
         var base: Token? = null
         if (peek(GREATER)) {
             eat(GREATER)
             base = eat(IDENTIFIER)
         }
-        var body: ArrayList<Let> = ArrayList()
+        val body: ArrayList<Let> = ArrayList()
         while (!peek(END)) {
             body.add(lets())
         }
@@ -63,7 +62,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun expression(): Expr {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         var result: Expr = Literal(null, begin)
         if (peek(IDENTIFIER)) {
             result = Variable(eat(IDENTIFIER), begin)
@@ -92,7 +91,7 @@ class Parser(private val tokens: List<Token>) {
             // nothing...
         } else if (peek(LBRAC)) {
             eat(LBRAC)
-            var body: ArrayList<Expr> = ArrayList()
+            val body: ArrayList<Expr> = ArrayList()
             if (!peek(RBRAC)) {
                 body.add(expression())
                 while (!peek(RBRAC)) {
@@ -113,7 +112,6 @@ class Parser(private val tokens: List<Token>) {
             result = Not(expression(), begin)
         } else {
             error(tokens[current].line, "Invalid expression")
-            println(tokens.slice(current until tokens.size))
             throw Exception()
         }
         if (peek(LEFT_PAREN)) {
@@ -124,11 +122,11 @@ class Parser(private val tokens: List<Token>) {
             eat(COLON)
             if(peek(IDENTIFIER)) {
                 val ident = eat(IDENTIFIER)
-                if (peek(LEFT_PAREN)) {
+                result = if (peek(LEFT_PAREN)) {
                     val fcalle = fcall()
-                    result = FCallExpr(Property(result, ident, begin), fcalle.operands, fcalle.line)
+                    FCallExpr(Property(result, ident, begin), fcalle.operands, fcalle.line)
                 } else
-                    result = Property(result, ident, begin)
+                    Property(result, ident, begin)
             }
             else if(peek(LEFT_PAREN)) {
                 eat(LEFT_PAREN)
@@ -139,11 +137,11 @@ class Parser(private val tokens: List<Token>) {
                 eat(COLON)
                 if(peek(IDENTIFIER)) {
                     val ident = eat(IDENTIFIER)
-                    if (peek(LEFT_PAREN)) {
+                    result = if (peek(LEFT_PAREN)) {
                         val fcalle = fcall()
-                        result = FCallExpr(Property(result, ident, begin), fcalle.operands, fcalle.line)
+                        FCallExpr(Property(result, ident, begin), fcalle.operands, fcalle.line)
                     } else
-                        result = Property(result, ident, begin)
+                        Property(result, ident, begin)
                 }
                 else if(peek(LEFT_PAREN)) {
                     eat(LEFT_PAREN)
@@ -181,9 +179,8 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun statement(): Stmt {
-        var begin = tokens[current].line
-        var result: Stmt
-        result = if (peek(LET)) {
+        val begin = tokens[current].line
+        val result: Stmt = if (peek(LET)) {
             lets()
         } else if (peek(IF)) {
             ifs()
@@ -199,11 +196,11 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun ifs(): IfStmt {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         eat(IF)
-        var cond = expression()
-        var body: ArrayList<Stmt> = ArrayList()
-        var elseBody: ArrayList<Stmt> = ArrayList()
+        val cond = expression()
+        val body: ArrayList<Stmt> = ArrayList()
+        val elseBody: ArrayList<Stmt> = ArrayList()
         while (!peek(END) && !peek(ELSE)) {
             body.add(statement())
         }
@@ -221,10 +218,10 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun whiles(): WhileStmt {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         eat(WHILE)
-        var cond = expression()
-        var body: ArrayList<Stmt> = ArrayList()
+        val cond = expression()
+        val body: ArrayList<Stmt> = ArrayList()
         while (!peek(END)) {
             body.add(statement())
         }
@@ -233,17 +230,17 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun lets(): Let {
-        var begin = tokens[current].line
+        val begin = tokens[current].line
         eat(LET)
-        var name: Token = eat(IDENTIFIER)
+        val name: Token = eat(IDENTIFIER)
         eat(EQUAL)
-        var value: Expr = expression()
+        val value: Expr = expression()
         return Let(name, value, begin)
     }
 
     fun parse(): Stmt {
-        var begin = tokens[current].line
-        var stmtList: ArrayList<Stmt> = ArrayList()
+        val begin = tokens[current].line
+        val stmtList: ArrayList<Stmt> = ArrayList()
         while (!peek(EOF)) {
             stmtList.add(statement())
         }

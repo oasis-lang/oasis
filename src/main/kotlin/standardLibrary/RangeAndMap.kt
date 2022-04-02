@@ -29,7 +29,7 @@ fun range(base: Double, ceil: Double): ArrayList<Int> {
 }
 
 fun createRange(vals: ArrayList<Int>) : OasisPrototype {
-    var rangeProto = OasisPrototype(base, -1)
+    val rangeProto = OasisPrototype(base, -1)
     rangeProto.set("iter", KotlinFunction1<OasisPrototype, OasisCallable> {
         func -> createRange(vals.map {x -> func.call(globalInterpreter!!, listOf(x))} as ArrayList<Int>)
     })
