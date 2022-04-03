@@ -79,76 +79,100 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     override fun visitBinOp(binop: BinOp): Any? {
         val left = eval(binop.left)
         val right = eval(binop.right)
-        when(binop.operator.type) {
+        return when(binop.operator.type) {
             TokenType.PLUS -> {
-                return when(left) {
+                when(left) {
                     is OasisPrototype -> (left.get("__plus") as OasisCallable).call(this, listOf(right))
                     is Double -> left + right as Double
+                    is Int -> left + right as Int
                     is String -> left + right.toString()
                     else -> throw RuntimeError(binop.line, "Cannot add")
                 }
             }
             TokenType.MINUS -> {
-                return when(left) {
+                when(left) {
                     is OasisPrototype -> (left.get("__sub") as OasisCallable).call(this, listOf(right))
                     is Double -> left - right as Double
+                    is Int -> left - right as Int
                     else -> throw RuntimeError(binop.line, "Cannot subtract")
                 }
             }
             TokenType.STAR -> {
-                return when(left) {
+                when(left) {
                     is OasisPrototype -> (left.get("__mul") as OasisCallable).call(this, listOf(right))
                     is Double -> left * right as Double
+                    is Int -> left * right as Int
                     else -> throw RuntimeError(binop.line, "Cannot multiply")
                 }
             }
             TokenType.SLASH -> {
-                return when(left) {
+                when(left) {
                     is OasisPrototype -> (left.get("__div") as OasisCallable).call(this, listOf(right))
                     is Double -> left / right as Double
+                    is Int -> left / right as Int
                     else -> {println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")}
                 }
             }
             TokenType.EQUAL_EQUAL -> {
                 if (left != null) {
-                    return left == right
+                    left == right
                 } else {
                     if (right == null) {
-                        return true
+                        true
                     }
-                    return false
+                    false
                 }
             }
             TokenType.BANG_EQUAL -> {
                 if (left != null) {
-                    return left != right
+                    left != right
                 } else {
                     if (right != null) {
-                        return true
+                        true
                     }
-                    return false
+                    false
                 }
             }
             TokenType.GREATER -> {
-                return (left as Double) > (right as Double)
+                when(left) {
+                    is Double -> left > right as Double
+                    is Int -> left > right as Int
+                    else -> throw RuntimeError(binop.line, "Cannot greater")
+                }
             }
             TokenType.GREATER_EQUAL -> {
-                return (left as Double) >= (right as Double)
+                when(left) {
+                    is Double -> left >= right as Double
+                    is Int -> left >= right as Int
+                    else -> throw RuntimeError(binop.line, "Cannot greater equal")
+                }
             }
             TokenType.LESS -> {
-                return (left as Double) < (right as Double)
+                when(left) {
+                    is Double -> left < right as Double
+                    is Int -> left < right as Int
+                    else -> throw RuntimeError(binop.line, "Cannot less")
+                }
             }
             TokenType.LESS_EQUAL -> {
-                return (left as Double) <= (right as Double)
+                when(left) {
+                    is Double -> left <= right as Double
+                    is Int -> left <= right as Int
+                    else -> throw RuntimeError(binop.line, "Cannot less equal")
+                }
             }
             TokenType.MOD -> {
-                return (left as Double) % (right as Double)
+                when(left) {
+                    is Double -> left % right as Double
+                    is Int -> left % right as Int
+                    else -> throw RuntimeError(binop.line, "Cannot mod")
+                }
             }
             TokenType.AND -> {
-                return isTruthy(left) && isTruthy(right)
+                isTruthy(left) && isTruthy(right)
             }
             TokenType.OR -> {
-                return isTruthy(left) || isTruthy(right)
+                isTruthy(left) || isTruthy(right)
             }
             else -> throw RuntimeError(binop.line, "Invalid operator")
         }
