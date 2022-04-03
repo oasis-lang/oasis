@@ -10,14 +10,6 @@ val hashmap = Module("map") {
         createHashMap(HashMap())
     }
     it.define("map", mapFactory)
-    it.define("toMap", KotlinFunction1<OasisPrototype, OasisPrototype> {
-        createHashMap(it.body as HashMap<Any?, Any?>)
-    })
-    it.define("toProto", KotlinFunction1<OasisPrototype, OasisPrototype> {
-        OasisPrototype(base, line).apply {
-            body = it.get("__map") as HashMap<String, Any?>
-        }
-    })
 }
 
 fun createHashMap(hashMap: HashMap<Any?, Any?>): OasisPrototype {

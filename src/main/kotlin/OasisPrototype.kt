@@ -1,4 +1,4 @@
-class OasisPrototype(private var inherit: OasisPrototype?, val line: Int): Cloneable{
+class OasisPrototype(var inherit: OasisPrototype?, val line: Int): Cloneable{
     var body: HashMap<String, Any?> = HashMap()
 
     fun get(name: String): Any? {

@@ -14,7 +14,8 @@ object StandardLibrary {
         range,
         sys,
         hashmap,
-        json
+        json,
+        prototype
     )
 
     fun addModule(x: Module) = modules.add(x)
