@@ -17,7 +17,7 @@ val io = Module("io") {
     io.set("read", KotlinFunction0(::readLine))
     io.set("readc", KotlinFunction0 { return@KotlinFunction0 Char(System.`in`.read()) })
     io.set("open", KotlinFunction1<String, String>{ Files.readString(Path.of(it))})
-    io.set("open", KotlinFunction2<Unit, String, String>{ z, y -> Files.writeString(Path.of(z), y)})
+    io.set("write", KotlinFunction2<Unit, String, String>{ z, y -> Files.writeString(Path.of(z), y)})
     io.set("printf", KotlinFunction2<Unit, String, OasisCallable> { z, y -> print(globalInterpreter?.let { it1 ->
         y.call(
             it1, listOf(z))

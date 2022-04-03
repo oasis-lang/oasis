@@ -106,7 +106,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
                 return when(left) {
                     is OasisPrototype -> (left.get("__div") as OasisCallable).call(this, listOf(right))
                     is Double -> left / right as Double
-                    else -> throw RuntimeError(binop.line, "Cannot divide")
+                    else -> {println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")}
                 }
             }
             TokenType.EQUAL_EQUAL -> {
