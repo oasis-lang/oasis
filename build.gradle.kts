@@ -14,6 +14,9 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.jline:jline-builtins:3.21.0")
+    implementation("org.jline:jline-reader:3.21.0")
+    implementation("org.jline:jline-terminal:3.21.0")
 }
 
 tasks.withType<KotlinCompile> {

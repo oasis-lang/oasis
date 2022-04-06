@@ -1,3 +1,6 @@
+import org.jline.reader.*
+import org.jline.reader.impl.history.DefaultHistory
+import org.jline.terminal.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -7,6 +10,10 @@ var repl = false
 fun main(args: Array<String>) {
     val interpreter = Interpreter()
     globalInterpreter = interpreter
+    val console = LineReaderBuilder.builder()
+        .terminal(TerminalBuilder.terminal())
+        .history(DefaultHistory())
+        .build()
     (interpreter.environment.get(Token(TokenType.IDENTIFIER, "sys", null, -1)) as OasisPrototype).set("argv", ArrayList<Any?>())
     val program = args.find {
         Files.exists(Path.of(it))
@@ -29,22 +36,19 @@ fun main(args: Array<String>) {
             }*/
     } else while(true) {
         repl = true
-        print("oasis> ")
-        val scanner: Scanner? = readLine()?.let { Scanner(it) }
+        val scanner: Scanner? = console.readLine("oasis -> ")?.let { Scanner(it) }
         if(scanner != null){
             val tokens: List<Token> = scanner.scanTokens()
             val parser = Parser(tokens)
             val ast = parser.parse()
             try {
                 interpreter.execute(ast)
-                repl = true
             }
             catch (e: RuntimeError) {
                 error(e.line, e.s)
             } catch (e: Exception) {
                 println(e)
             }
-
         }
     }
 }

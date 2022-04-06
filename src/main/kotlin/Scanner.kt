@@ -120,7 +120,7 @@ class Scanner(private val source: String) {
     }
 
     private fun peekNext(): Char{
-        if(current + 1 >- source.length) return Char(0)
+        if(current + 1 >= source.length) return Char(0)
         return source[current + 1]
     }
 
@@ -130,7 +130,6 @@ class Scanner(private val source: String) {
             advance()
             while(peek().isDigit()) advance()
         }
-
         addToken(NUMBER, if (!negative) source.substring(start, current).toDouble() else -( source.substring(start, current).toDouble()) )
     }
 

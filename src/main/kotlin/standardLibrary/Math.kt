@@ -12,7 +12,6 @@ val math = Module("math") {
         set("cos", KotlinFunction1(Math::cos))
         set("ceil", KotlinFunction1(Math::ceil))
         set("floor", KotlinFunction1(Math::floor))
-        set("round", KotlinFunction1(Math::round))
         set("sqrt", KotlinFunction1(Math::sqrt))
         set("exp", KotlinFunction1(Math::exp))
         set("log", KotlinFunction1(Math::log))

@@ -16,7 +16,8 @@ object StandardLibrary {
         hashmap,
         json,
         prototype,
-        math
+        math,
+        async
     )
 
     fun addModule(x: Module) = modules.add(x)
