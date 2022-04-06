@@ -24,7 +24,7 @@ To run the Jarfile:
 
     java -jar oasiskt.jar
 
-You should be prompted with an `oasis -> ` prompt. Try running something:
+You should be prompted with an `oasis ->` prompt. Try running something:
 
     oasis -> 1 + 1
     2
