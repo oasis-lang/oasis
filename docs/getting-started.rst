@@ -11,24 +11,20 @@ To Build
 ********
 
 Clone the repository:
-.. code-block::
 
     git clone https://github.com/oasis-lang/oasis
 
 Enter the Oasis directory and build:
-.. code-block::
 
     cd oasis/
     ./gradlew build
 
 After a little while, you should have a built Jarfile in `build/libs`.
 To run the Jarfile:
-.. code-block::
 
     java -jar oasiskt.jar
 
 You should be prompted with an `oasis -> ` prompt. Try running something:
-.. code-block::
 
     oasis -> 1 + 1
     2
