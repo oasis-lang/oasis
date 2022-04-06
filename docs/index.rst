@@ -9,15 +9,11 @@ Welcome to Oasis's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :glob:
 
+   *
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`getting-started`
-* :ref:`syntax`
-* :ref:`prototypes`
-* :ref:`standard-library`
-* :ref:`functions`
-* :ref:`constructs`
 * :ref:`search`
