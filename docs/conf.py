@@ -56,6 +56,6 @@ html_static_path = ['_static']
 html_css_files = [
     'font.css',
 ]
-
+html_extra_path = ['Hermit-Regular.otf']
 def setup(app):
     app.add_stylesheet('font.css')
