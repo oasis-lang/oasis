@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "Hermit Regular";
+    src: url("./Hermit-Regular.otf");
+}
+
+pre {
+    font-family: "Hermit Regular", monospace;
+}
