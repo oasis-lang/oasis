@@ -56,3 +56,6 @@ html_static_path = ['_static']
 html_css_files = [
     'font.css',
 ]
+
+def setup(app):
+    app.add_stylesheet('font.css')
