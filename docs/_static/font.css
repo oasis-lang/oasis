@@ -1,8 +1,8 @@
 @font-face {
-    font-family: "Hermit Regular";
-    src: url("./Hermit-Regular.otf");
+    font-family: "Inconsolata";
+    src: url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Yantramanav:wght@100;500;900&display=swap');
 }
 
 pre {
-    font-family: "Hermit Regular", monospace;
+    font-family: "Inconsolata", monospace;
 }
