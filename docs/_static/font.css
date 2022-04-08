@@ -1,7 +1,4 @@
-@font-face {
-    font-family: "Inconsolata";
-    src: url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Yantramanav:wght@100;500;900&display=swap');
-}
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Yantramanav:wght@100;500;900&display=swap');
 
 pre {
     font-family: "Inconsolata", monospace;
