@@ -22,7 +22,8 @@ class Scanner(private val source: String) {
         "and" to AND,
         "or" to OR,
         "not" to NOT,
-        "clone" to NEW
+        "clone" to NEW,
+        "is" to IS,
     )
 
     fun scanTokens(): List<Token> {

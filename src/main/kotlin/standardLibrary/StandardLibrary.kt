@@ -18,7 +18,9 @@ object StandardLibrary {
         prototype,
         math,
         async,
-        api
+        api,
+        import,
+        func
     )
 
     fun addModule(x: Module) = modules.add(x)

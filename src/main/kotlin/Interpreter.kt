@@ -3,7 +3,7 @@ import standardLibrary.base
 
 var line: Int = 0
 
-class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
+class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     private var globals = Environment()
     var environment: Environment = globals
@@ -188,7 +188,20 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visitProto(proto: Proto): Any {
         val protoType = OasisPrototype((if (proto.base != null) environment.get(proto.base) else base) as OasisPrototype?, proto.line)
-        proto.body.stmts.map { protoType.set((it as Let).left.lexeme, eval(it.value)) }
+        proto.body.stmts.map {
+            if(it is Let)
+                protoType.set(it.left.lexeme, eval(it.value))
+            else
+                protoType.set(((
+                        (it as ExprStmt)
+                            .expr as AssignmentExpr)
+                            .left as Variable)
+                            .name
+                            .lexeme,
+                        eval(
+                            (it.expr as AssignmentExpr)
+                                .value))
+        }
         return protoType
     }
 
@@ -196,11 +209,13 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         environment.define(let.left.lexeme, eval(let.value))
     }
 
-    override fun visitIfStmt(ifstmt: IfStmt) {
-        if(isTruthy(eval(ifstmt.expr))) {
+    override fun visitIfStmt(ifstmt: IfStmt): Boolean {
+        return if(isTruthy(eval(ifstmt.expr))) {
             execute(ifstmt.stmtlist)
+            true
         } else {
             ifstmt.elseBody?.let { execute(it) }
+            false
         }
     }
 
@@ -255,6 +270,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visitNot(not: Not): Any {
         return !isTruthy(eval(not.expr))
+    }
+
+    override fun visitIs(is_: Is) {
+        is_.cases.stmts.map {
+            if ((it as IfStmt).accept(this) as Boolean)
+                return
+        }
+        is_.else_?.let {
+            execute(it)
+        }
     }
 
 }

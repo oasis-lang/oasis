@@ -23,31 +23,36 @@ fun main(args: Array<String>) {
         val scanner = Scanner(Files.readString(Path.of(program)))
         val tokens = scanner.scanTokens()
         val parser = Parser(tokens)
-        val ast = parser.parse()
+        val ast: Stmt?
+        try {
+            ast = parser.parse()
+        } catch (e: ParseException) {
+            exitProcess(1)
+        }
         try {
             interpreter.execute(ast)
         }
         catch (e: RuntimeError) {
             error(e.line, e.s)
             exitProcess(1)
-        } /*catch (e: Exception) {
-                error(-1, e.toString())
-                exit(1)
-            }*/
+        }
     } else while(true) {
         repl = true
         val scanner: Scanner? = console.readLine("oasis -> ")?.let { Scanner(it) }
         if(scanner != null){
             val tokens: List<Token> = scanner.scanTokens()
             val parser = Parser(tokens)
-            val ast = parser.parse()
+            val ast: Stmt?
+            try {
+                ast = parser.parse()
+            } catch (e: ParseException) {
+                continue
+            }
             try {
                 interpreter.execute(ast)
             }
             catch (e: RuntimeError) {
                 error(e.line, e.s)
-            } catch (e: Exception) {
-                println(e)
             }
         }
     }

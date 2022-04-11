@@ -1,5 +1,5 @@
 class Environment(private val enclosing: Environment? = null) {
-    private var values: HashMap<String, Any?> = HashMap()
+    var values: HashMap<String, Any?> = HashMap()
 
     fun define(name: String, value: Any?) {
         values[name] = value

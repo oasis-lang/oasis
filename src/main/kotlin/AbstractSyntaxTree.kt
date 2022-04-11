@@ -26,6 +26,7 @@ abstract class Stmt(var line: Int) {
         fun visitStmtList(stmtlist: StmtList): T
         fun visitReturnStmt(retstmt: RetStmt): T
         fun visitExprStmt(exprStmt: ExprStmt): T
+        fun visitIs(is_: Is): T
     }
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
@@ -201,5 +202,11 @@ class Not(val expr: Expr, line: Int): Expr(line) {
 
     override fun toString(): String {
         return "Not(${expr}) at $line"
+    }
+}
+
+class Is(val expr: Expr, val cases: StmtList, val else_: StmtList?, line: Int): Stmt(line) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitIs(this)
     }
 }

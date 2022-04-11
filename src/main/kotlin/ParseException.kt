@@ -1,0 +1,1 @@
+class ParseException : Exception()

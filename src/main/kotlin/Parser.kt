@@ -1,4 +1,5 @@
 import TokenType.*
+import kotlin.math.exp
 
 class Parser(private val tokens: List<Token>) {
     private var current: Int = 0
@@ -19,7 +20,7 @@ class Parser(private val tokens: List<Token>) {
     private fun eat(type: TokenType): Token {
         if (!peek(type)) {
             error(tokens[current].line, "Unexpected token ${tokens[current].lexeme}, expected ${type.name}")
-            throw Exception()
+            throw ParseException()
         }
         return tokens[current++]
     }
@@ -53,9 +54,20 @@ class Parser(private val tokens: List<Token>) {
             eat(GREATER)
             base = eat(IDENTIFIER)
         }
-        val body: ArrayList<Let> = ArrayList()
+        val body: ArrayList<Stmt> = ArrayList()
         while (!peek(END)) {
-            body.add(lets())
+            if(peek(LET))
+                body.add(lets())
+            else
+                body.add(
+                    ExprStmt(
+                        AssignmentExpr(
+                            Variable(
+                                eat(IDENTIFIER).also
+                                { eat(EQUAL) }, begin),
+                            expression(),
+                            begin),
+                        begin))
         }
         eat(END)
         return Proto(base, StmtList(body, begin), begin)
@@ -112,7 +124,8 @@ class Parser(private val tokens: List<Token>) {
             result = Not(expression(), begin)
         } else {
             error(tokens[current].line, "Invalid expression")
-            throw Exception()
+            println(tokens.slice(current until tokens.size))
+            throw ParseException()
         }
         if (peek(LEFT_PAREN)) {
             val fcalle = fcall()
@@ -189,6 +202,8 @@ class Parser(private val tokens: List<Token>) {
         } else if (peek(RETURN)) {
             eat(RETURN)
             RetStmt(expression(), begin)
+        } else if(peek(IS)) {
+            iss()
         } else {
             ExprStmt(expression(), begin)
         }
@@ -215,6 +230,40 @@ class Parser(private val tokens: List<Token>) {
             eat(END)
             IfStmt(cond, StmtList(body, begin), StmtList(elseBody, begin), begin)
         }
+    }
+
+    private fun iss(): Is {
+        val begin = tokens[current].line
+        eat(IS)
+        val expr = expression()
+        val cases = ArrayList<IfStmt>()
+        var else_: StmtList? = null
+        while (!peek(END) && !peek(ELSE)) {
+            val caseExpr = expression()
+            val caseBody = ArrayList<Stmt>()
+            while(!peek(END)) {
+                caseBody.add(statement())
+            }
+            eat(END)
+            cases.add(IfStmt(BinOp(
+                expr,
+                Token(EQUAL_EQUAL, "==", null, begin),
+                caseExpr,
+                begin), StmtList(caseBody, begin),
+                null,
+                begin))
+        }
+        if (peek(ELSE)) {
+            eat(ELSE)
+            val caseBody = ArrayList<Stmt>()
+            while(!peek(END)) {
+                caseBody.add(statement())
+            }
+            eat(END)
+            else_ = StmtList(caseBody, begin)
+        }
+        eat(END)
+        return Is(expr, StmtList(cases, begin), else_, begin)
     }
 
     private fun whiles(): WhileStmt {
