@@ -6,13 +6,13 @@ The syntax of Oasis is very simple.
 
 To define a variable, use the `let` keyword.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     let foo = 1
 
 To assign a new value to a defined variable, no keyword is needed.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     let foo = 1
     foo = 2
@@ -20,7 +20,7 @@ To assign a new value to a defined variable, no keyword is needed.
 To get a property of something, use `:`.
 For example:
 
-.. code-block:: lua
+.. code-block:: oasis
 
     // Other languages:
     foo.bar // property bar of foo
@@ -30,7 +30,7 @@ For example:
 
 For most block statements, a marker for the beginning of a block is not necessary. All blocks must end with the `end` keyword.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     if 1 == 1
         io:print("woah! 1 is equal to 1!!")
@@ -38,7 +38,7 @@ For most block statements, a marker for the beginning of a block is not necessar
 
 Functions only exist in the form of `function literals.` These are practically lambdas.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     let foo = fn(x)
         return x * x
@@ -56,7 +56,7 @@ Functions only exist in the form of `function literals.` These are practically l
 
 Prototypes also only exist in literal form.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     let foo = proto
         x = 2
@@ -80,7 +80,7 @@ Prototypes also only exist in literal form.
 
 You can clone a prototype with the `clone` keyword.
 
-.. code-block:: lua
+.. code-block:: oasis
 
     let foo = proto
         x = 1
