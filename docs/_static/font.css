@@ -1,5 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Yantramanav:wght@100;500;900&display=swap');
+@font-face {
+    font-family: Hermit-Regular;
+    src: url("Hermit-Regular.otf") format("opentype");
+}
 
 pre {
-    font-family: "Inconsolata", monospace;
+    font-family: "Hermit-Regular", monospace;
 }

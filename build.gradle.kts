@@ -17,19 +17,20 @@ dependencies {
     implementation("org.jline:jline-builtins:3.21.0")
     implementation("org.jline:jline-reader:3.21.0")
     implementation("org.jline:jline-terminal:3.21.0")
+    implementation("org.knowm.xchart:xchart:3.8.1")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "11"
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("oasis.MainKt")
 }
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "MainKt"
+        attributes["Main-Class"] = "me.snwy.oasis.MainKt"
     }
     configurations["compileClasspath"].forEach { file: File ->
         from(zipTree(file.absoluteFile))

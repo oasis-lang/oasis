@@ -1,0 +1,7 @@
+// libpy: bindings from standard Oasis library to Python
+
+let io = proto
+    let print = print
+    let read = input
+    let open = open
+end
