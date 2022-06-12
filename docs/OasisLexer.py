@@ -37,7 +37,7 @@ class OasisLexer(RegexLexer):
             (r'(continue)', Keyword),
             (r'"[^"]*"', String.Double),
             (r'\'[^\']\'', String.Char),
-            (r'(\+|\-|\*|\/|\%|\=)', Operator),
+            (r'(\+|\-|\*|\/|\%|\=|\=\=)', Operator),
             (r'(\d+\.\d*|\d*\.\d+)([eE][+-]?\d+)?', Number.Float),
             (r'\d+([eE][+-]?\d+)?', Number.Integer),
             (r'\$[a-zA-Z0-9_]+', Name.Variable),
