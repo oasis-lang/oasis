@@ -18,7 +18,7 @@ class OasisLexer(RegexLexer):
             (r'(break)', Keyword),
             (r'(continue)', Keyword),
             (r'(return)', Keyword),
-            (r'(true|false)', Keyword.Constant),
+            (r'(true|false)', Keyword.Type),
             (r'(nil)', Keyword.Constant),
             (r'(let|immutable)', Keyword.Declaration),
             (r'(proto)', Keyword),
