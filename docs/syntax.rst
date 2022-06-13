@@ -164,6 +164,21 @@ You can clone a prototype with the `clone` keyword.
     io:print(baz:x) // 3
 
 ********
+Exceptions
+********
+
+To run a block of code and catch any exceptions, use the `test` keyword.
+The catch code goes in the `error` block.
+
+.. code-block:: oasis
+
+    test
+        let foo = 1 / 0
+    error(e) // you can use '_' to ignore the exception
+        io:print("woah! I caught an exception!")
+    end
+
+********
 Operators
 ********
 
