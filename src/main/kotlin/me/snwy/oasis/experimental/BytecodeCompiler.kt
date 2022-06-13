@@ -217,4 +217,8 @@ class BytecodeCompiler : me.snwy.oasis.Expr.Visitor<Unit>, me.snwy.oasis.Stmt.Vi
     override fun visitListComprehension(listComprehension: ListComprehension) {
         TODO("Not yet implemented")
     }
+
+    override fun visitMapLiteral(mapLiteral: MapLiteral) {
+        TODO("Not yet implemented")
+    }
 }

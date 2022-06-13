@@ -12,18 +12,18 @@ fun createHashMap(hashMap: HashMap<Any?, Any?>, interpreter: Interpreter): Oasis
     val map = OasisPrototype(base, line, interpreter)
     map.set("__map", hashMap)
     map.apply {
-        set("set", KotlinFunction2<OasisPrototype, String, Any?> { x, y ->
+        set("set", KotlinFunction2<OasisPrototype, Any?, Any?> { x, y ->
             (get("__map") as HashMap<Any?, Any?>)[x] = y
             return@KotlinFunction2 this
         })
-        set("del", KotlinFunction1<OasisPrototype, String> { x ->
+        set("del", KotlinFunction1<OasisPrototype, Any?> { x ->
             (get("__map") as HashMap<Any?, Any?>).remove(x)
             return@KotlinFunction1 this
         })
-        set("__index", KotlinFunction1<Any?, String> { x ->
+        set("__index", KotlinFunction1<Any?, Any?> { x ->
             (get("__map") as HashMap<Any?, Any?>)[x]
         })
-        set("__setIndex", KotlinFunction2<Any?, String, Any?> { x, y ->
+        set("__setIndex", KotlinFunction2<Any?, Any?, Any?> { x, y ->
             (get("__map") as HashMap<Any?, Any?>)[x] = y
             return@KotlinFunction2 this
         })
@@ -31,7 +31,7 @@ fun createHashMap(hashMap: HashMap<Any?, Any?>, interpreter: Interpreter): Oasis
             (get("__map").toString())
         })
         set("__serialize", KotlinFunction0 { _ ->
-            get("__map") as HashMap<String, Any?>
+            get("__map") as HashMap<Any?, Any?>
         })
         set("__iterator", KotlinFunction1<Any?, Double> { index ->
             val map = get("__map") as HashMap<Any?, Any?>

@@ -442,4 +442,11 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         return listComprehension
     }
 
+    override fun visitMapLiteral(mapLiteral: MapLiteral): Expr {
+        mapLiteral.exprs = mapLiteral.exprs.map {
+            Pair(it.first.accept(this), it.second.accept(this))
+        } as ArrayList<Pair<Expr, Expr>>
+        return mapLiteral
+    }
+
 }

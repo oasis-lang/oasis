@@ -167,5 +167,9 @@ class PythonTranspiler : me.snwy.oasis.Expr.Visitor<String>, me.snwy.oasis.Stmt.
         TODO("Not yet implemented")
     }
 
+    override fun visitMapLiteral(mapLiteral: MapLiteral): String {
+        TODO("Not yet implemented")
+    }
+
 
 }

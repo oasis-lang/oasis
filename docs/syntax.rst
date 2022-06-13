@@ -98,7 +98,7 @@ Oasis has string literals, number literals, boolean literals, list literals, dic
     let bar = 1
     let baz = true
     let qux = [1, 2, 3]
-    let quux = {foo = "hello", bar = 1}
+    let quux = {foo | "hello", bar | 1}
     let corge = 'a'
 
 ********

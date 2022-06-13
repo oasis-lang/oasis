@@ -75,7 +75,7 @@ class Scanner(private val source: String) {
             '"' -> string()
             '\'' -> char()
             '%' -> addToken(MOD)
-            '|' -> addToken(if (match('>')) RIGHT_PIPE else LEFT_PIPE)
+            '|' -> addToken(if (match('>')) RIGHT_PIPE else PIPE)
             '?' -> addToken(QUESTION)
             '{' -> addToken(LBRACE)
             '}' -> addToken(RBRACE)

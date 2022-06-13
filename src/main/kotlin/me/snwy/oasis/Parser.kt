@@ -245,10 +245,25 @@ class Parser(private val tokens: List<Token>) {
         val begin = tokens[current].line
         eat(LBRACE)
         val func = expression()
-        eat(OF)
-        val list = expression()
-        eat(RBRACE)
-        return ListComprehension(func, list, begin)
+        if (peek(PIPE)) {
+            eat(PIPE)
+            val value = expression()
+            val values = arrayListOf(Pair(func, value))
+            while (!peek(RBRACE)) {
+                eat(COMMA)
+                values.add(Pair(
+                    expression().also { eat(PIPE) },
+                    expression())
+                )
+            }
+            eat(RBRACE)
+            return MapLiteral(values, begin)
+        } else {
+            eat(OF)
+            val list = expression()
+            eat(RBRACE)
+            return ListComprehension(func, list, begin)
+        }
     }
 
     private fun statement(): Stmt {

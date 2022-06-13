@@ -2,6 +2,7 @@ package me.snwy.oasis
 
 import me.snwy.oasis.standardLibrary.StandardLibrary
 import me.snwy.oasis.standardLibrary.base
+import me.snwy.oasis.standardLibrary.createHashMap
 
 var line: Int = 0
 
@@ -443,5 +444,13 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             }
             else -> throw RuntimeError(listComprehension.line, "Cannot iterate")
         }
+    }
+
+    override fun visitMapLiteral(mapLiteral: MapLiteral): Any? {
+        val map = HashMap<Any?, Any?>()
+        mapLiteral.exprs.map {
+            map[eval(it.first)] = eval(it.second)
+        }
+        return createHashMap(map, this)
     }
 }

@@ -18,6 +18,7 @@ abstract class Expr(var line: Int) {
         fun visitNew(ref: New): T
         fun visitNot(not: Not): T
         fun visitListComprehension(listComprehension: ListComprehension): T
+        fun visitMapLiteral(mapLiteral: MapLiteral): T
     }
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
@@ -215,6 +216,12 @@ class Not(var expr: Expr, line: Int): Expr(line) {
 
     override fun toString(): String {
         return "Not(${expr}) at $line"
+    }
+}
+
+class MapLiteral(var exprs: ArrayList<Pair<Expr, Expr>>, line: Int) : Expr(line) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitMapLiteral(this)
     }
 }
 
