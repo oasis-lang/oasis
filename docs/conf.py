@@ -48,7 +48,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_redactor_theme
+
 html_theme = 'press'
 html_theme_path = [sphinx_redactor_theme.get_html_theme_path()]
 
