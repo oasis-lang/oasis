@@ -74,18 +74,6 @@ For most block statements, a marker for the beginning of a block is not necessar
         io:print("woah! 2 is not equal to 2!!")
     end
 
-    while true
-        io:print("woah! I'm in a loop!")
-    end
-
-    for i in range(0, 10)
-        io:print("woah! I'm in a loop!")
-    end
-
-    for let i = 0 | i < 10 | i += 1
-        io:print("woah! I'm in a loop!")
-    end
-
 ********
 Literals
 ********
@@ -186,6 +174,66 @@ The catch code goes in the `error` block.
     error(e) // you can use '_' to ignore the exception
         io:print("woah! I caught an exception!")
     end
+
+********
+Loops
+********
+
+For loops have two different forms.
+The first one is the traditional for loop.
+
+.. code-block:: oasis
+
+    for let i = 0 | i < 10 | i += 1
+        io:print(i)
+    end
+
+The second one is the iterator for loop. This is a more modern form of for loop.
+
+.. code-block:: oasis
+
+    for i in range(0, 10)
+        io:print(i)
+    end
+
+There is also the while loop.
+
+.. code-block:: oasis
+
+    while true
+        io:print("woah! I'm in a loop!")
+    end
+
+You can also use the `break` keyword to break out of a loop.
+
+.. code-block:: oasis
+
+    while true
+        io:print("woah! I'm in a loop!")
+        break
+    end
+
+You can also use the `continue` keyword to skip the rest of the loop.
+
+.. code-block:: oasis
+
+    while true
+        if true
+            continue
+        end
+        io:print("woah! I'm in a loop!") // this will never print
+    end
+
+********
+List Comprehensions
+********
+
+List comprehensions are syntatic sugar for mapping a function over a list.
+
+.. code-block:: oasis
+
+        let foo = [1, 2, 3, 4, 5]
+        let bar = {fn(i) => i * 2 of foo} // [2, 4, 6, 8, 10]
 
 ********
 Operators
