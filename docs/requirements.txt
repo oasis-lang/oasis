@@ -1,1 +1,1 @@
-sphinx-redactor-theme
+sphinx-press-theme
