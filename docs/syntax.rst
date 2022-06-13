@@ -169,7 +169,7 @@ Operators
 
 Here's a rundown of all of Oasis's operators.
 
-    **Arithmetic**
+**Arithmetic**
 
 .. code-block:: oasis
 
@@ -179,7 +179,7 @@ Here's a rundown of all of Oasis's operators.
     1 / 2 // division: 0.5
     1 % 2 // modulus: 1
 
-    **Directional evaluation**
+**Directional evaluation**
 
 These are the directional evaluation operators.
 They are used to evaluate expressions in a specific direction.
@@ -190,7 +190,7 @@ They are always evaluated left-to-right, but depending on the direction of the a
     1 |> 2 |> 3 // right evaluation: 3
     1 <| 2 <| 3 // left evaluation: 1
 
-    **Comparison**
+**Comparison**
 
 .. code-block:: oasis
     1 == 2 // equality: false
