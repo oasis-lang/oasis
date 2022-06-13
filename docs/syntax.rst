@@ -217,6 +217,7 @@ They are always evaluated left-to-right, but depending on the direction of the a
 **Comparison**
 
 .. code-block:: oasis
+
     1 == 2 // equality: false
     1 != 2 // inequality: true
     1 < 2 // less than: true
