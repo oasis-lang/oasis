@@ -21,6 +21,15 @@ To assign a new value to a defined variable, no keyword is needed.
     let foo = 1
     foo = 2
 
+You can also modify a variable's value by using the different forms of the `=` operator.
+
+.. code-block:: oasis
+
+    let foo = 1
+    foo = 2
+    foo += 1
+    foo -= 1
+
 ********
 Indexing
 ********
@@ -220,3 +229,5 @@ They are always evaluated left-to-right, but depending on the direction of the a
     not true // logical not: false
 
     null ? 1 // null coalescing: 1
+
+That's the basics of the Oasis syntax.
