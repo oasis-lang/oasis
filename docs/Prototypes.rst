@@ -3,7 +3,7 @@ Prototypes
 ######
 
 Prototypes are similar to classes, but they are not types, they are literal instances. A prototype is somewhat equivalent to a static class.
-A common misconception is that prototypes are classes and that they are types. However, prototypes are not types. They are literal instances.
+A common misconception is that prototypes are classes and that they are types.
 For example:
 
 .. code-block:: oasis
@@ -62,9 +62,11 @@ Prototypes can have overloaded functions. For example:
 Here's all of the overloadable functions:
 
 **__add, __sub, __mul, __div, __mod, __and, __or**
+
 Add, subtract, multiply, divide, modulus, logical and, and logical or.
 
 **__serialize**
+
 This function is called when the prototype is serialized. It must return a hashmap.
 
 .. code-block:: oasis
@@ -82,6 +84,7 @@ This function is called when the prototype is serialized. It must return a hashm
     io:print(json:dump(foo)) // prints "{ "a": 5, "b": 7 }"
 
 **__index**
+
 This function is called when the prototype is indexed.
 
 .. code-block:: oasis
@@ -97,6 +100,7 @@ This function is called when the prototype is indexed.
     io:print(foo:(2)) // prints "3"
 
 **__setIndex**
+
 This function is called when an index of the prototype is assigned.
 
 .. code-block:: oasis
@@ -113,6 +117,7 @@ This function is called when an index of the prototype is assigned.
     io:print(foo:a) // prints "[1, 2, 4]"
 
 **__iterator**
+
 This function is called when the prototype is iterated. It accepts a numeric value for index.
 Once the index is out of range, the function must call `panic:iteratorExhausted`.
 
@@ -134,6 +139,7 @@ Once the index is out of range, the function must call `panic:iteratorExhausted`
     end
 
 **toString**
+
 This function is called when the prototype is converted to a string.
 It must return a string.
 
