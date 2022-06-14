@@ -42,7 +42,7 @@ Now, let's change something in foo:
     io:print(bar:a) // prints 2
 
 This is because foo is the prototype of bar. Bar is a child of foo, so it inherits the changes made to foo.
-Bar is not an instance of foo, as prototypes cannot be instantiated, as they are not types.
+Bar is not an instance of foo, as prototypes cannot be instantiated, because they are not types.
 
 ********
 Overloads
