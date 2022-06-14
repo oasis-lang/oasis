@@ -45,6 +45,25 @@ This is because foo is the prototype of bar. Bar is a child of foo, so it inheri
 Bar is not an instance of foo, as prototypes cannot be instantiated, because they are not types.
 
 ********
+Cloning
+********
+
+Prototypes can be cloned. The clone of a prototype is entirely detached from the original. Any changes made to the clone will not affect the original, and vice versa.
+
+.. code-block:: oasis
+
+    let foo = proto
+        a = 1
+        b = "hello!"
+    end
+
+    let bar = clone foo
+    bar:a = 2
+    io:print(bar:a) // prints 2
+
+    io:print(foo:a) // prints 1
+
+********
 Overloads
 ********
 
@@ -119,7 +138,7 @@ This function is called when an index of the prototype is assigned.
 **__iterator**
 
 This function is called when the prototype is iterated. It accepts a numeric value for index.
-Once the index is out of range, the function must call `panic:iteratorExhausted`.
+Once the index is out of range, the function must call the `iteratorExhausted` function.
 
 .. code-block:: oasis
 
@@ -129,7 +148,7 @@ Once the index is out of range, the function must call `panic:iteratorExhausted`
             if x < this:a:size()
                 return this:a:(x)
             else
-                panic:iteratorExhausted()
+                iteratorExhausted()
             end
         end
     end
