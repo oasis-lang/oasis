@@ -2,11 +2,11 @@
 Syntax
 ######
 
+The syntax of Oasis is very simple.
+
 ********
 Variable Definitons
 ********
-
-The syntax of Oasis is very simple.
 
 To define a variable, use the `let` keyword.
 
@@ -256,6 +256,7 @@ Here's a rundown of all of Oasis's operators.
 These are the directional evaluation operators.
 They are used to evaluate expressions in a specific direction.
 They are always evaluated left-to-right, but depending on the direction of the arrow, it will return the first or last expression.
+These are identical to the comma operator in C, but with direction.
 
 .. code-block:: oasis
 
@@ -278,5 +279,3 @@ They are always evaluated left-to-right, but depending on the direction of the a
     not true // logical not: false
 
     null ? 1 // null coalescing: 1
-
-That's the basics of the Oasis syntax.
