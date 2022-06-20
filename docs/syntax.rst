@@ -8,7 +8,7 @@ The syntax of Oasis is very simple.
 Variable Definitons
 ********
 
-To define a variable, use the `let` keyword.
+To define a variable, use the ``let`` keyword.
 
 .. code-block:: oasis
 
@@ -21,7 +21,7 @@ To assign a new value to a defined variable, no keyword is needed.
     let foo = 1
     foo = 2
 
-You can also modify a variable's value by using the different forms of the `=` operator.
+You can also modify a variable's value by using the different forms of the ``=`` operator.
 
 .. code-block:: oasis
 
@@ -34,7 +34,7 @@ You can also modify a variable's value by using the different forms of the `=` o
 Indexing
 ********
 
-To get a property of something, use `:`.
+To get a property of something, use ``:``.
 For example:
 
 .. code-block:: oasis
@@ -45,7 +45,7 @@ For example:
     // oasis:
     foo:bar // property bar of foo
 
-To get the index of an array, use `:(index)`.
+To get the index of an array, use ``:(index)``.
 For example:
 
 .. code-block:: oasis
@@ -60,7 +60,7 @@ For example:
 Block Statements
 ********
 
-For most block statements, a marker for the beginning of a block is not necessary. All blocks must end with the `end` keyword.
+For most block statements, a marker for the beginning of a block is not necessary. All blocks must end with the ``end`` keyword.
 
 .. code-block:: oasis
 
@@ -144,7 +144,7 @@ Prototypes also only exist in literal form.
     io:print(bar:y(3)) // 6
     io:print(bar:z) // 5
 
-You can clone a prototype with the `clone` keyword.
+You can clone a prototype with the ``clone`` keyword.
 
 .. code-block:: oasis
 
@@ -166,8 +166,8 @@ You can clone a prototype with the `clone` keyword.
 Exceptions
 ********
 
-To run a block of code and catch any exceptions, use the `test` keyword.
-The catch code goes in the `error` block.
+To run a block of code and catch any exceptions, use the ``test`` keyword.
+The catch code goes in the ``error`` block.
 
 .. code-block:: oasis
 
@@ -206,7 +206,7 @@ There is also the while loop.
         io:print("woah! I'm in a loop!")
     end
 
-You can also use the `break` keyword to break out of a loop.
+You can also use the ``break`` keyword to break out of a loop.
 
 .. code-block:: oasis
 
@@ -215,7 +215,7 @@ You can also use the `break` keyword to break out of a loop.
         break
     end
 
-You can also use the `continue` keyword to skip the rest of the loop.
+You can also use the ``continue`` keyword to skip the rest of the loop.
 
 .. code-block:: oasis
 

@@ -47,7 +47,7 @@ These can also be inlined.
 'Is' Statements
 ********
 
-An 'is' statement is similar to a switch statement in other languages.
+An ``is`` statement is similar to a switch statement in other languages.
 
 .. code-block:: oasis
 
@@ -117,4 +117,4 @@ The for loop has two forms.
 
     // prints 0 1 2 3 4 5 6 7 8 9
 
-In the first form, the loop iterates over a prototype that implements `__iterator`. The second form is a more traditional for loop.
+In the first form, the loop iterates over a prototype that implements ``__iterator``. The second form is a more traditional for loop.
