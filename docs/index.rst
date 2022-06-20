@@ -11,6 +11,8 @@ Welcome to Oasis's documentation!
    :caption: Contents:
    :glob:
 
+   *
+   
 Indices and tables
 ==================
 
