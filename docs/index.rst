@@ -12,8 +12,8 @@ Welcome to Oasis's documentation!
 
    getting-started
    syntax
-   conditionals
-   prototypes
+   Conditionals
+   Prototypes
 
 Indices and tables
 ==================
