@@ -21,6 +21,11 @@ For example:
     io:print(foo:c(2)) // prints 3
 
 This prototype contains three members: the number 1, the string "hello!", and a function that adds the value of the member "a" to the argument.
+
+********
+Inheritance
+********
+
 Prototypes can be inherited from. For example:
 
 .. code-block:: oasis
@@ -43,6 +48,55 @@ Now, let's change something in foo:
 
 This is because foo is the prototype of bar. Bar is a child of foo, so it inherits the changes made to foo.
 Bar is not an instance of foo, as prototypes cannot be instantiated, because they are not types.
+
+You can change the prototype of a prototype. Let's say we have 3 prototypes, A, B, and C.
+
+.. code-block:: oasis
+
+    let A = proto
+        a_value = 1
+    end
+
+    let B = proto
+        b_value = 2
+    end
+
+    let C = proto
+        c_value = 3
+    end
+
+All of these prototypes are currently independent of each other.
+
+We can change the prototype of C to A:
+
+.. code-block:: oasis
+
+    prototype:setPrototypeOf(C, A)
+
+    io:print(C:a_value) // prints 1
+    io:print(C:b_value) // undefined, as B is not the prototype of C
+    io:print(C:c_value) // prints 3
+
+And, the changes made to A are also applied to C.
+
+.. code-block:: oasis
+
+    A:another_value = 4
+    io:print(C:another_value) // prints 4
+
+Now, we can change the prototype of C to B:
+
+.. code-block:: oasis
+
+    prototype:setPrototypeOf(C, B)
+
+    io:print(C:another_value) // undefined, as A is no longer the prototype of C
+    io:print(C:a_value) // undefined, as A is no longer the prototype of C
+    io:print(C:b_value) // prints 2
+    io:print(C:c_value) // prints 3
+
+The rule is that if a prototype is modified, all of its children are also modified. However, if a child is modified, its parent is not modified.
+When the parent of a prototype is changed, all of the values in the parent are removed from the child, and all of the values in the new parent are added to the child.
 
 ********
 Cloning

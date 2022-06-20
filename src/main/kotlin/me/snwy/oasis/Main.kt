@@ -44,8 +44,10 @@ fun main(args: Array<String>) {
         }
         catch (e: RuntimeError) {
             error(e.line, e.s)
+            println("| ${Files.readString(Path.of(program)).split('\n')[e.line - 1]}")
             exitProcess(1)
         } catch (e: ParseException) {
+            println("| ${Files.readString(Path.of(program)).split('\n')[env.parser.tokens[env.parser.current].line - 1]}")
             exitProcess(1)
         }
     } else while(true) {

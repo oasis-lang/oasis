@@ -5,7 +5,9 @@ object Creator {
         val env = OasisEnvironment(Interpreter(), null)
         env.eval = {
             val scanner = Scanner(it)
+            env.scanner = scanner
             val parser = Parser(scanner.scanTokens())
+            env.parser = parser
             val program = Optimizer().optimize(parser.parse())
             env.ast = program
         }
@@ -24,6 +26,9 @@ class OasisEnvironment(var interpreter: Interpreter, var ast: Stmt?) {
     lateinit var eval: (String) -> Unit
     lateinit var define: (String, Any) -> Unit
     lateinit var get: (String) -> Any?
+
+    lateinit var parser: Parser
+    lateinit var scanner: Scanner
 
     fun run() {
         interpreter.execute(ast!!)

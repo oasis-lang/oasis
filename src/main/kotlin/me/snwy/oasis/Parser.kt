@@ -2,8 +2,8 @@ package me.snwy.oasis
 
 import me.snwy.oasis.TokenType.*
 
-class Parser(private val tokens: List<Token>) {
-    private var current: Int = 0
+class Parser(val tokens: List<Token>) {
+    var current: Int = 0
 
     private var operators: List<TokenType> = listOf(
         MINUS, PLUS, SLASH, STAR,
