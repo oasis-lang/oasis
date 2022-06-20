@@ -99,6 +99,8 @@ class Parser(private val tokens: List<Token>) {
             result = Literal(eat(STRING).literal, begin)
         } else if(peek(CHAR)) {
             result = Literal(eat(CHAR).literal, begin)
+        } else if (peek(BYTE)) {
+            result = Literal(eat(BYTE).literal, begin)
         } else if (peek(TRUE)) {
             eat(TRUE)
             result = Literal(true, begin)
@@ -137,6 +139,14 @@ class Parser(private val tokens: List<Token>) {
         } else if(peek(NOT)){
             eat(NOT)
             result = Not(expression(), begin)
+        } else if(peek(IF)) {
+            eat(IF)
+            val condition = expression()
+            eat(LAMBDA_ARROW)
+            val then = expression()
+            eat(ELSE)
+            val else_ = expression()
+            result = IfExpression(condition, then, else_, begin)
         } else {
             error(tokens[current].line, "Invalid expression")
             throw ParseException()
@@ -380,6 +390,7 @@ class Parser(private val tokens: List<Token>) {
         var else_: StmtList? = null
         while (!peek(END) && !peek(ELSE)) {
             val caseExpr = expression()
+            eat(LAMBDA_ARROW)
             val caseBody = ArrayList<Stmt>()
             while(!peek(END)) {
                 caseBody.add(statement())

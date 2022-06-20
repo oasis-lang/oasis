@@ -453,4 +453,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         }
         return createHashMap(map, this)
     }
+
+    override fun visitIfExpression(ifExpression: IfExpression): Any? {
+        if (isTruthy(eval(ifExpression.expr))) {
+            return eval(ifExpression.thenExpr)
+        } else {
+            return eval(ifExpression.elseExpr)
+        }
+    }
 }

@@ -110,6 +110,8 @@ Functions only exist in the form of `function literals.` These are practically l
     end
 
     bar(fn(n) return 1 / n end, 5) // 1/5
+    // alternatively
+    bar(fn(n) => 1 / n, 5)
 
     // There is a function shorthand, for single-expression functions.
     let square = fn(x) => x * x

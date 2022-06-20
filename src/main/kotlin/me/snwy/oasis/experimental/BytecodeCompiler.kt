@@ -221,4 +221,8 @@ class BytecodeCompiler : me.snwy.oasis.Expr.Visitor<Unit>, me.snwy.oasis.Stmt.Vi
     override fun visitMapLiteral(mapLiteral: MapLiteral) {
         TODO("Not yet implemented")
     }
+
+    override fun visitIfExpression(ifExpression: IfExpression) {
+        TODO("Not yet implemented")
+    }
 }

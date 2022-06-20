@@ -449,4 +449,11 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         return mapLiteral
     }
 
+    override fun visitIfExpression(ifExpression: IfExpression): Expr {
+        ifExpression.expr = ifExpression.expr.accept(this)
+        ifExpression.thenExpr = ifExpression.thenExpr.accept(this)
+        ifExpression.elseExpr = ifExpression.elseExpr.accept(this)
+        return ifExpression
+    }
+
 }

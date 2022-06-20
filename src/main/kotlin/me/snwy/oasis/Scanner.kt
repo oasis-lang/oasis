@@ -79,6 +79,7 @@ class Scanner(private val source: String) {
             '?' -> addToken(QUESTION)
             '{' -> addToken(LBRACE)
             '}' -> addToken(RBRACE)
+            '0' -> if (match('x')) hex() else error(line, "Number can't begin with leading zero")
             else -> if(c.isDigit())
                         number()
                     else if(c.isLetter() || c == '_')
@@ -86,6 +87,12 @@ class Scanner(private val source: String) {
                     else
                         error(line, "Unexpected character '$c'.")
         }
+    }
+
+    private fun hex() {
+        while (CharRange('0', '9').contains(peek()) || CharRange('a', 'f').contains(peek()) || CharRange('A', 'F').contains(peek()))
+            advance()
+        addToken(BYTE, Integer.parseInt(source.substring(start + 2, current), 16).toUByte())
     }
 
     private fun identifier() {

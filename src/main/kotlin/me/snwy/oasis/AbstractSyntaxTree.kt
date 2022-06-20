@@ -19,6 +19,7 @@ abstract class Expr(var line: Int) {
         fun visitNot(not: Not): T
         fun visitListComprehension(listComprehension: ListComprehension): T
         fun visitMapLiteral(mapLiteral: MapLiteral): T
+        fun visitIfExpression(ifExpression: IfExpression): T
     }
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
@@ -228,6 +229,12 @@ class MapLiteral(var exprs: ArrayList<Pair<Expr, Expr>>, line: Int) : Expr(line)
 class ListComprehension(var expr: Expr, var inVal: Expr, line: Int): Expr(line) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitListComprehension(this)
+    }
+}
+
+class IfExpression(var expr: Expr, var thenExpr: Expr, var elseExpr: Expr, line: Int): Expr(line) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitIfExpression(this)
     }
 }
 
