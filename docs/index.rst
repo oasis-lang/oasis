@@ -9,10 +9,12 @@ Welcome to Oasis's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   :glob:
 
-   *
-   
+   getting-started
+   syntax
+   conditionals
+   prototypes
+
 Indices and tables
 ==================
 
