@@ -67,7 +67,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left + right, binop.line)
+                                        return Literal(left + right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -76,11 +76,11 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is String -> {
                                         val right = (binop.right as Literal).value as String
-                                        return Literal(left + right, binop.line)
+                                        return Literal(left + right, binop.line, binop.column)
                                     }
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left + right.toString(), binop.line)
+                                        return Literal(left + right.toString(), binop.line, binop.column)
                                     }
                                 }
                             }
@@ -95,7 +95,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left - right, binop.line)
+                                        return Literal(left - right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -110,7 +110,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left * right, binop.line)
+                                        return Literal(left * right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -125,7 +125,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left / right, binop.line)
+                                        return Literal(left / right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -140,7 +140,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left % right, binop.line)
+                                        return Literal(left % right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -155,7 +155,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Boolean -> {
                                         val right = (binop.right as Literal).value as Boolean
-                                        return Literal(left && right, binop.line)
+                                        return Literal(left && right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -170,7 +170,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Boolean -> {
                                         val right = (binop.right as Literal).value as Boolean
-                                        return Literal(left || right, binop.line)
+                                        return Literal(left || right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -185,7 +185,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left != right, binop.line)
+                                        return Literal(left != right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -194,7 +194,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is String -> {
                                         val right = (binop.right as Literal).value as String
-                                        return Literal(left != right, binop.line)
+                                        return Literal(left != right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -203,7 +203,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Boolean -> {
                                         val right = (binop.right as Literal).value as Boolean
-                                        return Literal(left != right, binop.line)
+                                        return Literal(left != right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -218,7 +218,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left == right, binop.line)
+                                        return Literal(left == right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -227,7 +227,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is String -> {
                                         val right = (binop.right as Literal).value as String
-                                        return Literal(left == right, binop.line)
+                                        return Literal(left == right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -236,7 +236,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Boolean -> {
                                         val right = (binop.right as Literal).value as Boolean
-                                        return Literal(left == right, binop.line)
+                                        return Literal(left == right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -251,7 +251,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left > right, binop.line)
+                                        return Literal(left > right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -266,7 +266,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left >= right, binop.line)
+                                        return Literal(left >= right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -281,7 +281,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left < right, binop.line)
+                                        return Literal(left < right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -296,7 +296,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
                                 when((binop.right as Literal).value) {
                                     is Double -> {
                                         val right = (binop.right as Literal).value as Double
-                                        return Literal(left <= right, binop.line)
+                                        return Literal(left <= right, binop.line, binop.column)
                                     }
                                 }
                             }
@@ -319,7 +319,7 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
             return immutables[variable.name.hashCode()] as Expr
         }
         nameMap[variable.name.lexeme.hashCode()] = variable.name.lexeme
-        return Precomputed(variable.name.lexeme.hashCode(), variable.line)
+        return Precomputed(variable.name.lexeme.hashCode(), variable.line, variable.column)
     }
 
     override fun visitProto(proto: Proto): Expr {

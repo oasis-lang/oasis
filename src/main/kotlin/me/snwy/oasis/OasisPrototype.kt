@@ -11,7 +11,7 @@ class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var int
         } else if(inherit != null && inherit!!.body.containsKey(name)) {
             return inherit!!.body[name]
         }
-        throw RuntimeError(line, "Prototype does not contain key '$name'")
+        return null
     }
 
     fun set(name: String, value: Any?) {
@@ -26,7 +26,20 @@ class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var int
         } ?: return "OasisPrototype <${hashCode()}>") as String
     }
 
+    override fun hashCode(): Int {
+        return interpreter?.let {
+            ((get("hashCode") as OasisCallable).call(it, listOf()) as Double).toInt()
+        } ?: return super.hashCode()
+    }
+
     override fun clone(): Any {
         return OasisPrototype(inherit, line, interpreter).let { body.map { x -> it.set(x.key, x.value) }; it }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if(get("__equals") != null) {
+            return (get("__equals") as OasisCallable).call(interpreter!!, listOf(other)) as Boolean
+        }
+        return super.equals(other)
     }
 }

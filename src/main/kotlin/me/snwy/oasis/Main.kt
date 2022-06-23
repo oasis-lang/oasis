@@ -11,16 +11,23 @@ import kotlin.system.exitProcess
 var repl = false
 fun main(args: Array<String>) {
     val env = Creator.create("")
-    val console = LineReaderBuilder.builder()
-        .terminal(TerminalBuilder.terminal())
-        .history(DefaultHistory())
-        .build()
     val program = args.find {
         Files.exists(Path.of(it))
     }
     val compile = args.find {
         it == "--compile" || it == "-c"
     } != null
+    val languageServer = args.find {
+        it == "--language-server" || it == "-l"
+    } != null
+    if (languageServer) {
+        val server = OasisLanguageServiceLauncher()
+        server.main()
+    }
+    val console = LineReaderBuilder.builder()
+        .terminal(TerminalBuilder.terminal())
+        .history(DefaultHistory())
+        .build()
     if (compile) {
         var scanner = Scanner(Files.readString(program?.let { Path.of(it) }))
         var tokens = scanner.scanTokens()
@@ -44,9 +51,12 @@ fun main(args: Array<String>) {
         }
         catch (e: RuntimeError) {
             error(e.line, e.s)
-            println("| ${Files.readString(Path.of(program)).split('\n')[e.line - 1]}")
+            if(e.line > 0) {
+                println("| ${Files.readString(Path.of(program)).split('\n')[e.line - 1]}")
+            }
             exitProcess(1)
         } catch (e: ParseException) {
+            error(e.line, e.parseMessage)
             println("| ${Files.readString(Path.of(program)).split('\n')[env.parser.tokens[env.parser.current].line - 1]}")
             exitProcess(1)
         }
@@ -57,7 +67,9 @@ fun main(args: Array<String>) {
         }
         catch (e: RuntimeError) {
             error(e.line, e.s)
-        } catch (_: ParseException) { }
+        } catch (e: ParseException) {
+            error(e.line, e.parseMessage)
+        }
     }
 }
 

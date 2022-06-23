@@ -18,6 +18,7 @@ dependencies {
     implementation("org.jline:jline-reader:3.21.0")
     implementation("org.jline:jline-terminal:3.21.0")
     implementation("org.knowm.xchart:xchart:3.8.1")
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0")
 }
 
 tasks.withType<KotlinCompile> {
@@ -33,7 +34,9 @@ tasks.jar {
         attributes["Main-Class"] = "me.snwy.oasis.MainKt"
     }
     configurations["compileClasspath"].forEach { file: File ->
-        from(zipTree(file.absoluteFile))
+        from(zipTree(file.absoluteFile)) {
+            exclude("META-INF/*.RSA", "META-INF/*.DSA", "META-INF/*.SF", "META-INF/*.EC")
+        }
     }
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }

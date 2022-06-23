@@ -7,6 +7,7 @@ class Scanner(private val source: String) {
     private var start: Int = 0
     private var current: Int = 0
     private var line: Int = 1
+    private var column: Int = 0
 
     private var keywords: Map<String, TokenType> = mapOf(
         "let" to LET,
@@ -35,12 +36,16 @@ class Scanner(private val source: String) {
         "of" to OF,
     )
 
+    private fun error(line: Int, column: Int, msg: String) {
+        throw ParseException(line, column, msg)
+    }
+
     fun scanTokens(): List<Token> {
         while(!isAtEnd()) {
             start = current
             scanToken()
         }
-        tokens.add(Token(EOF, "", null, line))
+        tokens.add(Token(EOF, "", null, line, column))
         return tokens
     }
 
@@ -65,11 +70,20 @@ class Scanner(private val source: String) {
                 while (peek() != '\n' && !isAtEnd())
                     advance()
             else
-                addToken(if (match('=')) SLASH_EQUAL else SLASH)
+                if (match('*')) {
+                    while (peek() != '*' && !isAtEnd())
+                        advance()
+                    if (match('*')) {
+                        if (!match('/')) {
+                            error(line, column, "Expected '/' after '*'")
+                        }
+                    }
+                } else
+                    addToken(if (match('=')) SLASH_EQUAL else SLASH)
             '[' -> addToken(LBRAC)
             ']' -> addToken(RBRAC)
             ' ', '\r', '\t' -> null
-            '\n' -> line++
+            '\n' -> { line++; column = 0 }
             '#' -> while (peek() != '\n' && !isAtEnd() && line == 1)
                 advance()
             '"' -> string()
@@ -79,13 +93,13 @@ class Scanner(private val source: String) {
             '?' -> addToken(QUESTION)
             '{' -> addToken(LBRACE)
             '}' -> addToken(RBRACE)
-            '0' -> if (match('x')) hex() else error(line, "Number can't begin with leading zero")
+            '0' -> if (match('x')) hex() else number()
             else -> if(c.isDigit())
                         number()
                     else if(c.isLetter() || c == '_')
                         identifier()
                     else
-                        error(line, "Unexpected character '$c'.")
+                        error(line, column, "Unexpected character '$c'.")
         }
     }
 
@@ -105,18 +119,18 @@ class Scanner(private val source: String) {
 
     private fun string() {
         while (peek() != '"' && !isAtEnd()) {
-            if(peek() == '\n') line++
+            if(peek() == '\n') { line++; column = 0 }
             if(peek() == '\\') {
                 advance()
                 when(peek()) {
                     '"', '\'', 'n', 'r', 't' -> null
-                    else -> error(line, "Invalid escape.")
+                    else -> error(line, column, "Invalid escape.")
                 }
             }
             advance()
         }
         if(isAtEnd()) {
-            error(line, "String without end.")
+            error(line, column, "String without end.")
             return
         }
         advance()
@@ -131,7 +145,7 @@ class Scanner(private val source: String) {
     private fun char() {
         val c: Char = advance()
         if (advance() != '\'') {
-            error(line, "Unterminated char literal.")
+            error(line, column, "Unterminated char literal.")
             return
         }
         addToken(CHAR, c)
@@ -164,6 +178,7 @@ class Scanner(private val source: String) {
     }
 
     private fun advance(): Char {
+        column++
         return source[current++]
     }
 
@@ -173,7 +188,7 @@ class Scanner(private val source: String) {
 
     private fun addToken(type: TokenType, literal: Any?) {
         val text: String = source.substring(start, current)
-        tokens.add(Token(type, text, literal, line))
+        tokens.add(Token(type, text, literal, line, column))
     }
 
 }

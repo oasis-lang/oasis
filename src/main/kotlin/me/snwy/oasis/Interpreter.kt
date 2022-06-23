@@ -157,8 +157,9 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                     }
                 }
             }
-            TokenType.EQUAL_EQUAL -> {
-                if (left != null) {
+            TokenType.EQUAL_EQUAL -> when(left) {
+                is Class<*> -> left.isAssignableFrom(right!! as Class<*>) || (right as Class<*>).isAssignableFrom(left)
+                else -> if (left != null) {
                     left == right
                 } else {
                     if (right == null) {

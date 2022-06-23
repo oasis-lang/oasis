@@ -36,7 +36,7 @@ val type = Module("type") { it, interpreter ->
         return@KotlinFunction1 x is String
     })
     type.set("isNum", KotlinFunction1<Boolean, Any?> { x ->
-        return@KotlinFunction1 x is Double || x is Int || x is Long || x is UInt
+        return@KotlinFunction1 x is Number
     })
     type.set("isChar", KotlinFunction1<Boolean, Any?> { x ->
         return@KotlinFunction1 x is Char
@@ -66,5 +66,21 @@ val type = Module("type") { it, interpreter ->
             return@KotlinFunction1 "null"
         }
     })
+    it.define("typeof", KotlinFunction1<Any?, Any?> { x ->
+        return@KotlinFunction1 if (x != null) {
+            x::class.java
+        } else {
+            Nothing::class.java
+        }
+    })
     it.define("type", type)
+    it.define("numType", Number::class.java)
+    it.define("stringType", String::class.java)
+    it.define("charType", Char::class.java)
+    it.define("boolType", Boolean::class.java)
+    it.define("listType", ArrayList::class.java)
+    it.define("bytesType", ByteArray::class.java)
+    it.define("nullType", Nothing::class.java)
+    it.define("objectType", OasisPrototype::class.java)
+    it.define("functionType", OasisCallable::class.java)
 }
