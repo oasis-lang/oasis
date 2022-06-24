@@ -1,4 +1,5 @@
 package me.snwy.oasis
+
 enum class TokenType {
     LEFT_PAREN, RIGHT_PAREN,
     COMMA, COLON, MINUS, PLUS, SLASH, STAR,

@@ -1,10 +1,6 @@
 package me.snwy.oasis.standardLibrary
 
-import me.snwy.oasis.KotlinFunction0
-import me.snwy.oasis.KotlinFunction1
-import me.snwy.oasis.KotlinFunction2
-import me.snwy.oasis.OasisCallable
-import me.snwy.oasis.OasisPrototype
+import me.snwy.oasis.*
 import kotlin.concurrent.thread
 
 val async = Module("async") { it, interpreter ->

@@ -21,6 +21,7 @@ abstract class Expr(var line: Int, var column: Int) {
         fun visitMapLiteral(mapLiteral: MapLiteral): T
         fun visitIfExpression(ifExpression: IfExpression): T
     }
+
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
 
@@ -44,6 +45,7 @@ abstract class Stmt(var line: Int, var column: Int) {
         fun visitContinueStmt(continue_: ContinueStmt): T
         fun visitRelStmt(relstmt: RelStmt): T
     }
+
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
 
@@ -61,6 +63,7 @@ class BinOp(var left: Expr, val operator: Token, var right: Expr, line: Int, col
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitBinOp(this)
     }
+
     override fun toString(): String {
         return "BinOp($left ${operator.lexeme} $right) at $line"
     }
@@ -70,6 +73,7 @@ class Literal(val value: Any?, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitLiteral(this)
     }
+
     override fun toString(): String {
         return "Literal($value) at $line"
     }
@@ -79,12 +83,14 @@ class AssignmentExpr(var left: Expr, var value: Expr, line: Int, column: Int) : 
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitAssignment(this)
     }
+
     override fun toString(): String {
         return "Assign($left = $value) at $line"
     }
 }
 
-class Let(val left: Token, var value: Expr, line: Int, column: Int, val immutable: Boolean = false) : Stmt(line, column) {
+class Let(val left: Token, var value: Expr, line: Int, column: Int, val immutable: Boolean = false) :
+    Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitLet(this)
     }
@@ -98,33 +104,38 @@ class StmtList(var stmts: List<Stmt>, line: Int, column: Int) : Stmt(line, colum
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitStmtList(this)
     }
+
     override fun toString(): String {
         return "StmtList($stmts) at $line"
     }
 }
 
-class Property(var obj: Expr, val indexer: Token, line: Int, column: Int) : Expr(line, column){
+class Property(var obj: Expr, val indexer: Token, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitProperty(this)
     }
+
     override fun toString(): String {
         return "Property($obj : ${indexer.lexeme}) at $line"
     }
 }
 
-class Func(val operands: List<Token>, var body: StmtList, line: Int, column: Int): Expr(line, column) {
+class Func(val operands: List<Token>, var body: StmtList, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitFunc(this)
     }
+
     override fun toString(): String {
         return "Func(${operands} : $body) at $line"
     }
 }
 
-class FCallExpr(var func: Expr, var operands: List<Expr>, line: Int, column: Int, var splat: Boolean = false) : Expr(line, column) {
+class FCallExpr(var func: Expr, var operands: List<Expr>, line: Int, column: Int, var splat: Boolean = false) :
+    Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitFcall(this)
     }
+
     override fun toString(): String {
         return "Call(${func} : ${operands}) at $line"
     }
@@ -134,12 +145,14 @@ class Group(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitGroup(this)
     }
+
     override fun toString(): String {
         return "Group($expr) at $line"
     }
 }
 
-class IfStmt(var expr: Expr, var stmtlist: StmtList, var elseBody: StmtList?, line: Int, column: Int) : Stmt(line, column) {
+class IfStmt(var expr: Expr, var stmtlist: StmtList, var elseBody: StmtList?, line: Int, column: Int) :
+    Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIfStmt(this)
     }
@@ -155,21 +168,23 @@ class Variable(val name: Token, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitVariable(this)
     }
+
     override fun toString(): String {
         return "Variable($name) at $line"
     }
 }
 
-class Proto(var base: Expr?, val body: StmtList, line: Int, column: Int): Expr(line, column) {
+class Proto(var base: Expr?, val body: StmtList, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitProto(this)
     }
+
     override fun toString(): String {
         return "Variable($base : $body) at $line"
     }
 }
 
-class RetStmt(var expr: Expr?, line: Int, column: Int): Stmt(line, column) {
+class RetStmt(var expr: Expr?, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitReturnStmt(this)
     }
@@ -179,7 +194,7 @@ class RetStmt(var expr: Expr?, line: Int, column: Int): Stmt(line, column) {
     }
 }
 
-class Indexer(var expr: Expr, var index: Expr, line: Int, column: Int): Expr(line, column) {
+class Indexer(var expr: Expr, var index: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIndexer(this)
     }
@@ -189,19 +204,19 @@ class Indexer(var expr: Expr, var index: Expr, line: Int, column: Int): Expr(lin
     }
 }
 
-class OasisList(var exprs: ArrayList<Expr>, line: Int, column: Int): Expr(line, column) {
+class OasisList(var exprs: ArrayList<Expr>, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitList(this)
     }
 }
 
-class Negate(var value: Expr, line: Int, column: Int): Expr(line, column) {
+class Negate(var value: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNegate(this)
     }
 }
 
-class New(var expr: Expr, line: Int, column: Int): Expr(line, column) {
+class New(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNew(this)
     }
@@ -211,7 +226,7 @@ class New(var expr: Expr, line: Int, column: Int): Expr(line, column) {
     }
 }
 
-class Not(var expr: Expr, line: Int, column: Int): Expr(line, column) {
+class Not(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNot(this)
     }
@@ -227,55 +242,59 @@ class MapLiteral(var exprs: ArrayList<Pair<Expr, Expr>>, line: Int, column: Int)
     }
 }
 
-class ListComprehension(var expr: Expr, var inVal: Expr, line: Int, column: Int): Expr(line, column) {
+class ListComprehension(var expr: Expr, var inVal: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitListComprehension(this)
     }
 }
 
-class IfExpression(var expr: Expr, var thenExpr: Expr, var elseExpr: Expr, line: Int, column: Int): Expr(line, column) {
+class IfExpression(var expr: Expr, var thenExpr: Expr, var elseExpr: Expr, line: Int, column: Int) :
+    Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIfExpression(this)
     }
 }
 
-class Is(var expr: Expr, val cases: StmtList, val else_: StmtList?, line: Int, column: Int): Stmt(line, column) {
+class Is(var expr: Expr, val cases: StmtList, val else_: StmtList?, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIs(this)
     }
 }
 
-class Test(var block: StmtList, var errorBlock: StmtList, var errorVar: Token, line: Int, column: Int): Stmt(line, column) {
+class Test(var block: StmtList, var errorBlock: StmtList, var errorVar: Token, line: Int, column: Int) :
+    Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitTest(this)
     }
 }
 
-class ForLoopTriad(var init: Stmt, var cond: Expr, var step: Stmt, var body: StmtList, line: Int, column: Int): Stmt(line, column) {
+class ForLoopTriad(var init: Stmt, var cond: Expr, var step: Stmt, var body: StmtList, line: Int, column: Int) :
+    Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitForLoopTriad(this)
     }
 }
 
-class ForLoopIterator(var varName: Expr, var iterable: Expr, var body: StmtList, line: Int, column: Int): Stmt(line, column) {
+class ForLoopIterator(var varName: Expr, var iterable: Expr, var body: StmtList, line: Int, column: Int) :
+    Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitForLoopIterator(this)
     }
 }
 
-class BreakStmt(line: Int, column: Int): Stmt(line, column) {
+class BreakStmt(line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitBreakStmt(this)
     }
 }
 
-class ContinueStmt(line: Int, column: Int): Stmt(line, column) {
+class ContinueStmt(line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitContinueStmt(this)
     }
 }
 
-class RelStmt(var name: Token, var expr: Expr, line: Int, column: Int): Stmt(line, column) {
+class RelStmt(var name: Token, var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitRelStmt(this)
     }

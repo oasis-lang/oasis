@@ -18,7 +18,11 @@ val time = Module("time") { it, interpreter ->
         currentTime.set("min", time.minute)
         currentTime.set("sec", time.second)
         currentTime.set("toString", KotlinFunction0 { _ ->
-            "${currentTime.get("hour")}:${currentTime.get("min")}:${currentTime.get("sec")} ${currentTime.get("day")}/${currentTime.get("month")}/${currentTime.get("year")}"
+            "${currentTime.get("hour")}:${currentTime.get("min")}:${currentTime.get("sec")} ${currentTime.get("day")}/${
+                currentTime.get(
+                    "month"
+                )
+            }/${currentTime.get("year")}"
         })
         return@KotlinFunction0 currentTime
     })

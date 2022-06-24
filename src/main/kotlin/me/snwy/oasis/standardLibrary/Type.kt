@@ -12,23 +12,25 @@ val type = Module("type") { it, interpreter ->
             is List<*> -> {
                 val r = ByteArray(z.size)
                 var li = 0
-                z.map {v -> r[li] = when (v) {
-                    is Double -> v.toRawBits().toByte()
-                    is Int -> v.toByte()
-                    is Boolean -> if (v) 0x1 else 0x0
-                    is Char -> v.code.toByte()
-                    else -> throw RuntimeError(line,"'${v} cannot be converted to byte")
-                }; li += 1}
+                z.map { v ->
+                    r[li] = when (v) {
+                        is Double -> v.toRawBits().toByte()
+                        is Int -> v.toByte()
+                        is Boolean -> if (v) 0x1 else 0x0
+                        is Char -> v.code.toByte()
+                        else -> throw RuntimeError(line, "'${v} cannot be converted to byte")
+                    }; li += 1
+                }
                 return@KotlinFunction1 r
             }
             is String -> {
                 val r = ByteArray(z.length)
                 var li = 0
-                z.map {v -> r[li] = v.code.toByte(); li += 1}
+                z.map { v -> r[li] = v.code.toByte(); li += 1 }
                 return@KotlinFunction1 r
             }
             else -> {
-                throw RuntimeError(line,"'${z.toString()}' cannot be represented as a bytes-object")
+                throw RuntimeError(line, "'${z.toString()}' cannot be represented as a bytes-object")
             }
         }
     })

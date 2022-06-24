@@ -1,8 +1,9 @@
 package me.snwy.oasis.standardLibrary
-import me.snwy.oasis.KotlinFunction1
-import me.snwy.oasis.OasisPrototype
+
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import me.snwy.oasis.KotlinFunction1
+import me.snwy.oasis.OasisPrototype
 
 var json = Module("json") { it, interpreter ->
     val json = OasisPrototype(base, -1, interpreter).apply {

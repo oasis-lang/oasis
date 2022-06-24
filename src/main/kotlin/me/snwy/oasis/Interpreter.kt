@@ -17,9 +17,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         StandardLibrary.generateLib(environment, this)
     }
 
-    inline fun eval(expr: Expr): Any? {
+    private inline fun eval(expr: Expr): Any? {
         return expr.accept(this)
     }
+
     inline fun execute(stmt: Stmt) {
         line = stmt.line
         stmt.accept(this)
@@ -45,15 +46,20 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitAssignment(assignment: AssignmentExpr): Any? {
         var a: Any? = null
-        when(assignment.left) {
-            is Property -> { a = eval(assignment.value); (eval((assignment.left as Property).obj) as OasisPrototype).set((assignment.left as Property).indexer.lexeme, a) }
+        when (assignment.left) {
+            is Property -> {
+                a = eval(assignment.value); (eval((assignment.left as Property).obj) as OasisPrototype).set(
+                    (assignment.left as Property).indexer.lexeme,
+                    a
+                )
+            }
             is Variable -> {
-                 a = eval(assignment.value)
+                a = eval(assignment.value)
                 environment.assign(assignment.left.hashCode(), a)
             }
             is Precomputed -> {
                 val left = environment.get((assignment.left as Precomputed).hash)
-                if(left is RelativeExpression) {
+                if (left is RelativeExpression) {
                     left.expr = assignment.value
                 } else {
                     a = eval(assignment.value)
@@ -62,13 +68,15 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             }
             is Indexer -> {
                 a = eval(assignment.value)
-                when(val indexer = eval((assignment.left as Indexer).expr)) {
+                when (val indexer = eval((assignment.left as Indexer).expr)) {
                     is ArrayList<*> -> (indexer as ArrayList<Any?>)[
                             (eval((assignment.left as Indexer).index) as Double).toInt()
                     ] = a
                     is OasisPrototype -> {
-                        (indexer.get("__setIndex") as OasisCallable).call(this,
-                            listOf(eval((assignment.left as Indexer).index), eval(assignment.value)))
+                        (indexer.get("__setIndex") as OasisCallable).call(
+                            this,
+                            listOf(eval((assignment.left as Indexer).index), eval(assignment.value))
+                        )
                     }
                     else -> throw RuntimeError(assignment.line, "Cannot index")
                 }
@@ -82,34 +90,37 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
 
     override fun visitProperty(property: Property): Any? {
-        val propertyVal = eval(property.obj)
-        return when(propertyVal) {
+        return when (val propertyVal = eval(property.obj)) {
             is String -> {
-                PartialFunc((environment.get("string".hashCode()) as OasisPrototype)
-                                    .get(property.indexer.lexeme) as OasisCallable,
+                PartialFunc(
+                    (environment.get("string".hashCode()) as OasisPrototype)
+                        .get(property.indexer.lexeme) as OasisCallable,
                     arrayListOf(propertyVal) as ArrayList<Any?>
                 )
             }
             is ArrayList<*> -> {
-                PartialFunc((environment.get("list".hashCode()) as OasisPrototype)
-                                    .get(property.indexer.lexeme) as OasisCallable,
+                PartialFunc(
+                    (environment.get("list".hashCode()) as OasisPrototype)
+                        .get(property.indexer.lexeme) as OasisCallable,
                     arrayListOf(propertyVal) as ArrayList<Any?>
                 )
             }
             is Func -> {
-                PartialFunc((environment.get("func".hashCode()) as OasisPrototype)
-                    .get(property.indexer.lexeme) as OasisCallable,
+                PartialFunc(
+                    (environment.get("func".hashCode()) as OasisPrototype)
+                        .get(property.indexer.lexeme) as OasisCallable,
                     arrayListOf(propertyVal) as ArrayList<Any?>
                 )
             }
             is Double -> {
-                PartialFunc((environment.get("math".hashCode()) as OasisPrototype)
-                    .get(property.indexer.lexeme) as OasisCallable,
+                PartialFunc(
+                    (environment.get("math".hashCode()) as OasisPrototype)
+                        .get(property.indexer.lexeme) as OasisCallable,
                     arrayListOf(propertyVal) as ArrayList<Any?>
                 )
             }
             is OasisPrototype -> propertyVal.get(property.indexer.lexeme)
-            else -> throw RuntimeError(line, "${propertyVal} is not a fielded object")
+            else -> throw RuntimeError(line, "$propertyVal is not a fielded object")
         }
     }
 
@@ -119,23 +130,24 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitFcall(fcall: FCallExpr): Any? {
         val callee = (eval(fcall.func) ?: throw RuntimeError(fcall.line, "cannot call null function")) as OasisCallable
-        val arguments: ArrayList<Any?> = (if(fcall.splat) eval(fcall.operands[0]) else fcall.operands.map { eval(it) }) as ArrayList<Any?>
+        val arguments: ArrayList<Any?> =
+            (if (fcall.splat) eval(fcall.operands[0]) else fcall.operands.map { eval(it) }) as ArrayList<Any?>
         return callee.call(this, arguments)
     }
 
     private fun isTruthy(thing: Any?): Boolean {
-        if(thing == null) return false
-        if(thing == 0.0) return false
-        if(thing == false) return false
+        if (thing == null) return false
+        if (thing == 0.0) return false
+        if (thing == false) return false
         return true
     }
 
     override fun visitBinOp(binop: BinOp): Any? {
         val left = eval(binop.left)
         val right = eval(binop.right)
-        return when(binop.operator.type) {
+        return when (binop.operator.type) {
             TokenType.PLUS -> {
-                when(left) {
+                when (left) {
                     is OasisPrototype -> (left.get("__plus") as OasisCallable).call(this, listOf(right))
                     is Double -> left + right as Double
                     is Int -> left + right as Int
@@ -144,7 +156,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 }
             }
             TokenType.MINUS -> {
-                when(left) {
+                when (left) {
                     is OasisPrototype -> (left.get("__sub") as OasisCallable).call(this, listOf(right))
                     is Double -> left - right as Double
                     is Int -> left - right as Int
@@ -152,7 +164,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 }
             }
             TokenType.STAR -> {
-                when(left) {
+                when (left) {
                     is OasisPrototype -> (left.get("__mul") as OasisCallable).call(this, listOf(right))
                     is Double -> left * right as Double
                     is Int -> left * right as Int
@@ -160,15 +172,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 }
             }
             TokenType.SLASH -> {
-                when(left) {
+                when (left) {
                     is OasisPrototype -> (left.get("__div") as OasisCallable).call(this, listOf(right))
                     is Double -> left / right as Double
                     is Int -> left / right as Int
-                    else -> {println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")
+                    else -> {
+                        println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")
                     }
                 }
             }
-            TokenType.EQUAL_EQUAL -> when(left) {
+            TokenType.EQUAL_EQUAL -> when (left) {
                 is Class<*> -> left.isAssignableFrom(right!! as Class<*>) || (right as Class<*>).isAssignableFrom(left)
                 else -> if (left != null) {
                     left == right
@@ -190,35 +203,35 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 }
             }
             TokenType.GREATER -> {
-                when(left) {
+                when (left) {
                     is Double -> left > right as Double
                     is Int -> left > right as Int
                     else -> throw RuntimeError(binop.line, "Cannot greater")
                 }
             }
             TokenType.GREATER_EQUAL -> {
-                when(left) {
+                when (left) {
                     is Double -> left >= right as Double
                     is Int -> left >= right as Int
                     else -> throw RuntimeError(binop.line, "Cannot greater equal")
                 }
             }
             TokenType.LESS -> {
-                when(left) {
+                when (left) {
                     is Double -> left < right as Double
                     is Int -> left < right as Int
                     else -> throw RuntimeError(binop.line, "Cannot less")
                 }
             }
             TokenType.LESS_EQUAL -> {
-                when(left) {
+                when (left) {
                     is Double -> left <= right as Double
                     is Int -> left <= right as Int
                     else -> throw RuntimeError(binop.line, "Cannot less equal")
                 }
             }
             TokenType.MOD -> {
-                when(left) {
+                when (left) {
                     is Double -> left % right as Double
                     is Int -> left % right as Int
                     else -> throw RuntimeError(binop.line, "Cannot mod")
@@ -249,27 +262,31 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitVariable(variable: Variable): Any? {
         val result = environment.get(variable.name.lexeme.hashCode())
-        if(result is RelativeExpression) {
+        if (result is RelativeExpression) {
             return result.expr.accept(this)
         }
         return result
     }
 
     override fun visitProto(proto: Proto): Any {
-        val protoType = OasisPrototype((if (proto.base != null) eval(proto.base!!) else base) as OasisPrototype?, proto.line, this)
+        val protoType =
+            OasisPrototype((if (proto.base != null) eval(proto.base!!) else base) as OasisPrototype?, proto.line, this)
         proto.body.stmts.map {
-            if(it is Let)
+            if (it is Let)
                 protoType.set(it.left.lexeme, eval(it.value))
             else
-                protoType.set(((
-                        (it as ExprStmt)
-                            .expr as AssignmentExpr)
-                            .left as Variable)
-                            .name
-                            .lexeme,
-                        eval(
-                            (it.expr as AssignmentExpr)
-                                .value))
+                protoType.set(
+                    ((
+                            (it as ExprStmt)
+                                .expr as AssignmentExpr)
+                        .left as Variable)
+                        .name
+                        .lexeme,
+                    eval(
+                        (it.expr as AssignmentExpr)
+                            .value
+                    )
+                )
         }
         return protoType
     }
@@ -279,7 +296,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitIfStmt(ifstmt: IfStmt): Boolean {
-        return if(isTruthy(eval(ifstmt.expr))) {
+        return if (isTruthy(eval(ifstmt.expr))) {
             execute(ifstmt.stmtlist)
             true
         } else {
@@ -289,11 +306,11 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitWhileStmt(whilestmt: WhileStmt) {
-        while(isTruthy(eval(whilestmt.expr))) {
+        while (isTruthy(eval(whilestmt.expr))) {
             try {
                 execute(whilestmt.body)
             } catch (internalException: InternalException) {
-                when(internalException.type) {
+                when (internalException.type) {
                     ExceptionType.BREAK -> break
                     ExceptionType.CONTINUE -> continue
                     ExceptionType.ITERATOR_EMPTY -> throw internalException
@@ -314,16 +331,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitExprStmt(exprStmt: ExprStmt) {
-        if(repl) {
+        if (repl) {
             repl = false
-            eval(exprStmt.expr).let { if(it !is Unit) println(it) }
+            eval(exprStmt.expr).let { if (it !is Unit) println(it) }
         } else {
             exprStmt.expr.accept(this)
         }
     }
 
     override fun visitIndexer(indexer: Indexer): Any? {
-        return when(val x = eval(indexer.expr)) {
+        return when (val x = eval(indexer.expr)) {
             is String -> x[(eval(indexer.index) as Double).toInt()]
             is ArrayList<*> -> x[(eval(indexer.index) as Double).toInt()]
             is OasisPrototype -> (x.get("__index") as OasisCallable).call(this, listOf(eval(indexer.index)))
@@ -342,7 +359,11 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitNew(ref: New): Any? {
-        return eval(ref.expr)?.let { if(it is Cloneable) { it.javaClass.getMethod("clone").invoke(it) } else throw RuntimeError(ref.line, "Cannot clone object") }
+        return eval(ref.expr)?.let {
+            if (it is Cloneable) {
+                it.javaClass.getMethod("clone").invoke(it)
+            } else throw RuntimeError(ref.line, "Cannot clone object")
+        }
     }
 
     override fun visitNot(not: Not): Any {
@@ -377,7 +398,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun vistPrecomputed(precomputed: Precomputed): Any? {
         environment.get(precomputed.hash).let {
-            if(it is RelativeExpression) {
+            if (it is RelativeExpression) {
                 return it.expr.accept(this)
             }
             return it
@@ -386,12 +407,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitForLoopTriad(forLoopTriad: ForLoopTriad) {
         forLoopTriad.init.accept(this)
-        while(isTruthy(eval(forLoopTriad.cond))) {
+        while (isTruthy(eval(forLoopTriad.cond))) {
             try {
                 execute(forLoopTriad.body)
                 forLoopTriad.step.accept(this)
             } catch (internalException: InternalException) {
-                when(internalException.type) {
+                when (internalException.type) {
                     ExceptionType.BREAK -> break
                     ExceptionType.CONTINUE -> continue
                     ExceptionType.ITERATOR_EMPTY -> throw internalException // keep it going, doesn't matter here
@@ -400,16 +421,17 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         }
     }
 
-    override fun visitForLoopIterator(forLoopIterator: ForLoopIterator){
-        when(val iteratorExpr = eval(forLoopIterator.iterable)) {
+    override fun visitForLoopIterator(forLoopIterator: ForLoopIterator) {
+        when (val iteratorExpr = eval(forLoopIterator.iterable)) {
             is OasisPrototype -> {
                 val iterator = iteratorExpr.get("__iterator") as OasisCallable
                 var index = 0
                 while (true) {
                     try { // Kill this with fire
-                        environment.values[(forLoopIterator.varName as Variable).name.lexeme.hashCode()] = iterator.call(this, listOf(index))
+                        environment.values[(forLoopIterator.varName as Variable).name.lexeme.hashCode()] =
+                            iterator.call(this, listOf(index))
                     } catch (internalException: InternalException) {
-                        when(internalException.type) {
+                        when (internalException.type) {
                             ExceptionType.BREAK -> break
                             ExceptionType.CONTINUE -> continue
                             ExceptionType.ITERATOR_EMPTY -> break
@@ -437,16 +459,21 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitListComprehension(listComprehension: ListComprehension): Any {
-        when(val iteratorExpr = eval(listComprehension.inVal)) {
+        when (val iteratorExpr = eval(listComprehension.inVal)) {
             is OasisPrototype -> {
                 val iterator = iteratorExpr.get("__iterator") as OasisCallable
                 var index = 0
                 val list = ArrayList<Any?>()
                 while (true) {
                     try { // Kill this with fire
-                        list.add((eval(listComprehension.expr) as OasisCallable).call(this, listOf(iterator.call(this, listOf(index)))))
+                        list.add(
+                            (eval(listComprehension.expr) as OasisCallable).call(
+                                this,
+                                listOf(iterator.call(this, listOf(index)))
+                            )
+                        )
                     } catch (internalException: InternalException) {
-                        when(internalException.type) {
+                        when (internalException.type) {
                             ExceptionType.BREAK -> break
                             ExceptionType.CONTINUE -> continue
                             ExceptionType.ITERATOR_EMPTY -> break
@@ -467,7 +494,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         }
     }
 
-    override fun visitMapLiteral(mapLiteral: MapLiteral): Any? {
+    override fun visitMapLiteral(mapLiteral: MapLiteral): Any {
         val map = HashMap<Any?, Any?>()
         mapLiteral.exprs.map {
             map[eval(it.first)] = eval(it.second)

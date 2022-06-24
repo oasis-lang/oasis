@@ -2,13 +2,14 @@ package me.snwy.oasis
 
 import me.snwy.oasis.standardLibrary.base
 
-class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var interpreter: Interpreter? = null): Cloneable{
+class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var interpreter: Interpreter? = null) :
+    Cloneable {
     var body: HashMap<String, Any?> = HashMap()
 
     fun get(name: String): Any? {
         if (body.containsKey(name)) {
             return body[name]
-        } else if(inherit != null && inherit!!.body.containsKey(name)) {
+        } else if (inherit != null && inherit!!.body.containsKey(name)) {
             return inherit!!.body[name]
         }
         return null
@@ -16,7 +17,7 @@ class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var int
 
     fun set(name: String, value: Any?) {
         body[name] = value
-        if(value is OasisFunction)
+        if (value is OasisFunction)
             value.closure.define("this".hashCode(), this)
     }
 
@@ -37,7 +38,7 @@ class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var int
     }
 
     override fun equals(other: Any?): Boolean {
-        if(get("__equals") != null) {
+        if (get("__equals") != null) {
             return (get("__equals") as OasisCallable).call(interpreter!!, listOf(other)) as Boolean
         }
         return super.equals(other)

@@ -2,9 +2,9 @@ package me.snwy.oasis.experimental
 
 import me.snwy.oasis.*
 
-class PythonTranspiler : me.snwy.oasis.Expr.Visitor<String>, me.snwy.oasis.Stmt.Visitor<String> {
+class PythonTranspiler : Expr.Visitor<String>, Stmt.Visitor<String> {
 
-    fun transpile(stmt: me.snwy.oasis.Stmt): String {
+    fun transpile(stmt: Stmt): String {
         val code = stmt.accept(this)
         return globalStatements.joinToString("\n") + "\n" + code
     }
@@ -15,13 +15,14 @@ class PythonTranspiler : me.snwy.oasis.Expr.Visitor<String>, me.snwy.oasis.Stmt.
 
     private var inProto = false
 
-    private fun indent(subtract: Boolean = false) = if(indentLevel == 0) "" else "\t".repeat(if(subtract) indentLevel - 1 else indentLevel)
+    private fun indent(subtract: Boolean = false) =
+        if (indentLevel == 0) "" else "\t".repeat(if (subtract) indentLevel - 1 else indentLevel)
 
-    override fun visitLiteral(literal: me.snwy.oasis.Literal): String {
-        when(literal.value) {
+    override fun visitLiteral(literal: Literal): String {
+        when (literal.value) {
             is Int -> return literal.value.toString()
             is Double -> return if (literal.value.toString().contains("."))
-                literal.value.toString().replace(Regex("0*\$"),"").replace(Regex("\\.\$"),"")
+                literal.value.toString().replace(Regex("0*\$"), "").replace(Regex("\\.\$"), "")
             else literal.value.toString()
             is String -> return "\"${literal.value}\""
             is Boolean -> {
@@ -36,110 +37,121 @@ class PythonTranspiler : me.snwy.oasis.Expr.Visitor<String>, me.snwy.oasis.Stmt.
         }
     }
 
-    override fun visitAssignment(assignment: me.snwy.oasis.AssignmentExpr): String {
+    override fun visitAssignment(assignment: AssignmentExpr): String {
         return "${assignment.left.accept(this)} = ${assignment.value.accept(this)}"
     }
 
-    override fun visitProperty(property: me.snwy.oasis.Property): String {
+    override fun visitProperty(property: Property): String {
         return "${property.obj.accept(this)}.${property.indexer.lexeme}"
     }
 
-    override fun visitFunc(func: me.snwy.oasis.Func): String {
+    override fun visitFunc(func: Func): String {
         val tempIndent = indentLevel
         indentLevel = 1
-        globalStatements.add("def f_${func.hashCode().toUInt()}(${if(inProto) "self, " else ""}${func.operands.joinToString(", ") { it.lexeme }}):\n"
-                + (func.body.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString(""))
+        globalStatements.add("def f_${
+            func.hashCode().toUInt()
+        }(${if (inProto) "self, " else ""}${func.operands.joinToString(", ") { it.lexeme }}):\n"
+                + (func.body.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString("")
+        )
         indentLevel = tempIndent
         return "f_${func.hashCode().toUInt()}"
     }
 
-    override fun visitFcall(fcall: me.snwy.oasis.FCallExpr): String {
+    override fun visitFcall(fcall: FCallExpr): String {
         return "${fcall.func.accept(this)}(${fcall.operands.joinToString(", ") { it.accept(this) }})"
     }
 
-    override fun visitBinOp(binop: me.snwy.oasis.BinOp): String {
+    override fun visitBinOp(binop: BinOp): String {
         return "${binop.left.accept(this)} ${binop.operator.lexeme} ${binop.right.accept(this)}"
     }
 
-    override fun visitGroup(group: me.snwy.oasis.Group): String {
+    override fun visitGroup(group: Group): String {
         return "(${group.expr.accept(this)})"
     }
 
-    override fun visitVariable(variable: me.snwy.oasis.Variable): String {
-        return if(variable.name.lexeme == "import") "__import__" else variable.name.lexeme
+    override fun visitVariable(variable: Variable): String {
+        return if (variable.name.lexeme == "import") "__import__" else variable.name.lexeme
     }
 
-    override fun vistPrecomputed(precomputed: me.snwy.oasis.Precomputed): String {
+    override fun vistPrecomputed(precomputed: Precomputed): String {
         throw RuntimeException("Unsupported precomputed")
     }
 
-    override fun visitProto(proto: me.snwy.oasis.Proto): String {
+    override fun visitProto(proto: Proto): String {
         inProto = true
         var proto_s = "type('proto_${proto.hashCode()}', (${proto.base?.accept(this) ?: "object"},), {"
         proto.body.stmts.forEach {
-            proto_s += "\"${(it as me.snwy.oasis.Let).left.lexeme}\": ${it.value.accept(this)}, "
+            proto_s += "\"${(it as Let).left.lexeme}\": ${it.value.accept(this)}, "
         }
         proto_s += "})"
         inProto = false
         return proto_s
     }
 
-    override fun visitIndexer(indexer: me.snwy.oasis.Indexer): String {
+    override fun visitIndexer(indexer: Indexer): String {
         return "${indexer.expr.accept(this)}[${indexer.index.accept(this)}]"
     }
 
-    override fun visitList(list: me.snwy.oasis.OasisList): String {
+    override fun visitList(list: OasisList): String {
         return "[${list.exprs.joinToString(", ") { it.accept(this) }}]"
     }
 
-    override fun visitNegate(negate: me.snwy.oasis.Negate): String {
+    override fun visitNegate(negate: Negate): String {
         return "-${negate.value.accept(this)}"
     }
 
-    override fun visitNew(ref: me.snwy.oasis.New): String {
+    override fun visitNew(ref: New): String {
         return "__import__(\"copy\").deepcopy(${ref.expr.accept(this)})"
     }
 
-    override fun visitNot(not: me.snwy.oasis.Not): String {
+    override fun visitNot(not: Not): String {
         return "not ${not.expr.accept(this)}"
     }
 
-    override fun visitLet(let: me.snwy.oasis.Let): String {
-        if(let.immutable)
+    override fun visitLet(let: Let): String {
+        if (let.immutable)
             println("Warning: Immutable values aren't supported in Python translation")
         return "${let.left.lexeme} = ${let.value.accept(this)}"
     }
 
-    override fun visitIfStmt(ifstmt: me.snwy.oasis.IfStmt): String {
+    override fun visitIfStmt(ifstmt: IfStmt): String {
         indentLevel++
-        var ifstmt_s = "if ${ifstmt.expr.accept(this)}:\n" + (ifstmt.stmtlist.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString("")
-        if(ifstmt.elseBody != null) {
-            ifstmt_s += "${indent(true)}else:\n" + (ifstmt.elseBody!!.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString("")
+        var ifstmt_s =
+            "if ${ifstmt.expr.accept(this)}:\n" + (ifstmt.stmtlist.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString(
+                ""
+            )
+        if (ifstmt.elseBody != null) {
+            ifstmt_s += "${indent(true)}else:\n" + (ifstmt.elseBody!!.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString(
+                ""
+            )
         }
         indentLevel--
         return ifstmt_s
     }
 
-    override fun visitWhileStmt(whilestmt: me.snwy.oasis.WhileStmt): String {
+    override fun visitWhileStmt(whilestmt: WhileStmt): String {
         indentLevel++
-        val while_c = "while ${whilestmt.expr.accept(this)}:\n" + (whilestmt.body.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString("")
+        val while_c =
+            "while ${whilestmt.expr.accept(this)}:\n" + (whilestmt.body.stmts.map { "${indent()}${it.accept(this)}\n" }).joinToString(
+                ""
+            )
         indentLevel--
         return while_c
     }
 
-    override fun visitStmtList(stmtlist: me.snwy.oasis.StmtList): String {
+    override fun visitStmtList(stmtlist: StmtList): String {
         return stmtlist.stmts.joinToString("\n") { it.accept(this) }
     }
 
-    override fun visitReturnStmt(retstmt: me.snwy.oasis.RetStmt): String {
+    override fun visitReturnStmt(retstmt: RetStmt): String {
         return "return ${retstmt.expr?.accept(this)}"
     }
 
-    override fun visitExprStmt(exprStmt: me.snwy.oasis.ExprStmt): String {
+    override fun visitExprStmt(exprStmt: ExprStmt): String {
         return exprStmt.expr.accept(this)
     }
 
-    override fun visitIs(is_: me.snwy.oasis.Is): String {
+    override fun visitIs(is_: Is): String {
         TODO("Fix this shit")
     }
 

@@ -1,9 +1,9 @@
 package me.snwy.oasis
 
 import me.snwy.oasis.experimental.PythonTranspiler
-import org.jline.reader.*
+import org.jline.reader.LineReaderBuilder
 import org.jline.reader.impl.history.DefaultHistory
-import org.jline.terminal.*
+import org.jline.terminal.TerminalBuilder
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.system.exitProcess
@@ -38,34 +38,38 @@ fun main(args: Array<String>) {
         } catch (e: ParseException) {
             exitProcess(1)
         }
-        scanner = object{}.javaClass.classLoader.getResource("libpy.oa")?.readText()?.let { Scanner(it) }!!
+        scanner = object {}.javaClass.classLoader.getResource("libpy.oa")?.readText()?.let { Scanner(it) }!!
         tokens = scanner.scanTokens()
         parser = Parser(tokens)
-        Files.writeString(Path.of("$program.py"), "${PythonTranspiler().transpile(parser.parse())}\n${PythonTranspiler().transpile(ast)}\n")
-    }
-    else if(program != null) {
+        Files.writeString(
+            Path.of("$program.py"),
+            "${PythonTranspiler().transpile(parser.parse())}\n${PythonTranspiler().transpile(ast)}\n"
+        )
+    } else if (program != null) {
         (env.get("sys") as OasisPrototype).set("argv", args.copyOfRange(1, args.size).toCollection(ArrayList<Any?>()))
         try {
             env.eval(Files.readString(Path.of(program)))
             env.run()
-        }
-        catch (e: RuntimeError) {
+        } catch (e: RuntimeError) {
             error(e.line, e.s)
-            if(e.line > 0) {
+            if (e.line > 0) {
                 println("| ${Files.readString(Path.of(program)).split('\n')[e.line - 1]}")
             }
             exitProcess(1)
         } catch (e: ParseException) {
             error(e.line, e.parseMessage)
-            println("| ${Files.readString(Path.of(program)).split('\n')[env.parser.tokens[env.parser.current].line - 1]}")
+            println(
+                "| ${
+                    Files.readString(Path.of(program)).split('\n')[env.parser.tokens[env.parser.current].line - 1]
+                }"
+            )
             exitProcess(1)
         }
-    } else while(true) {
+    } else while (true) {
         repl = true
         try {
-            console.readLine("oasis -> ")?.let { env.eval(it) ; env.run() }
-        }
-        catch (e: RuntimeError) {
+            console.readLine("oasis -> ")?.let { env.eval(it); env.run() }
+        } catch (e: RuntimeError) {
             error(e.line, e.s)
         } catch (e: ParseException) {
             error(e.line, e.parseMessage)

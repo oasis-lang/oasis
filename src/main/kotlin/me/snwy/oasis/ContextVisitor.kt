@@ -7,7 +7,7 @@ import org.eclipse.lsp4j.Range
 
 data class Or<A, B>(val a: A?, val b: B?)
 
-class PrototypeContext(val prototype: Proto, val visitor: ContextVisitor) {
+class PrototypeContext(prototype: Proto, visitor: ContextVisitor) {
     val map = mutableMapOf<String, Any>()
 
     init {
@@ -48,8 +48,8 @@ object stdMap {
 class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visitor<Unit> {
 
     val variables = hashMapOf<String, Any>()
-    val immutables = ArrayList<String>()
-    val rels = ArrayList<String>()
+    private val immutables = ArrayList<String>()
+    private val rels = ArrayList<String>()
 
     private val prototypes = hashMapOf<String, PrototypeContext>()
 
@@ -78,7 +78,7 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
                         )
                     )
                 }
-                if(rels.contains((assignment.left as Variable).name.lexeme)) {
+                if (rels.contains((assignment.left as Variable).name.lexeme)) {
                     diagnostics.add(
                         Diagnostic(
                             Range(Position(0, 0), Position(0, 0)),

@@ -2,9 +2,14 @@ package me.snwy.oasis
 
 class OasisFunction(private val declaration: Func, val closure: Environment) : OasisCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
-        val environment= Environment(closure)
+        val environment = Environment(closure)
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        (0 until declaration.operands.size).map { environment.define(declaration.operands[it].lexeme.hashCode(), arguments[it]) }
+        (0 until declaration.operands.size).map {
+            environment.define(
+                declaration.operands[it].lexeme.hashCode(),
+                arguments[it]
+            )
+        }
         try {
             interpreter.executeBlock(declaration.body, environment)
         } catch (returnValue: Return) {

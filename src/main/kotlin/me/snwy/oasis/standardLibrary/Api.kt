@@ -1,13 +1,8 @@
 package me.snwy.oasis.standardLibrary
 
-import me.snwy.oasis.KotlinFunction0
-import me.snwy.oasis.KotlinFunction1
-import me.snwy.oasis.KotlinFunction2
-import me.snwy.oasis.OasisCallable
-import me.snwy.oasis.OasisPrototype
 import com.sun.net.httpserver.HttpServer
+import me.snwy.oasis.*
 import java.net.InetSocketAddress
-import java.util.*
 
 var api = Module("api") { it, _ ->
     val api = KotlinFunction1<OasisPrototype, Double> { interpreter, it ->
@@ -20,8 +15,11 @@ var api = Module("api") { it, _ ->
                         val response = interpreter.let { it1 ->
                             y.call(
                                 it1,
-                                listOf(it.requestHeaders,
-                                    String(it.requestBody.readBytes())))
+                                listOf(
+                                    it.requestHeaders,
+                                    String(it.requestBody.readBytes())
+                                )
+                            )
                         } as ArrayList<Any?>
                         val responseCode = (response[0] as Double).toInt()
                         val responseText = response[1] as String
@@ -40,8 +38,11 @@ var api = Module("api") { it, _ ->
                         val response = interpreter.let { it1 ->
                             y.call(
                                 it1,
-                                listOf(it.requestHeaders,
-                                    String(it.requestBody.readBytes())))
+                                listOf(
+                                    it.requestHeaders,
+                                    String(it.requestBody.readBytes())
+                                )
+                            )
                         } as ArrayList<Any?>
                         val responseCode = (response[0] as Double).toInt()
                         val responseText = response[1] as String

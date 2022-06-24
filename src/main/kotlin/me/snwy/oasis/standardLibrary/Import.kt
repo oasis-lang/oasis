@@ -1,11 +1,7 @@
 package me.snwy.oasis.standardLibrary
 
-import me.snwy.oasis.Interpreter
-import me.snwy.oasis.KotlinFunction1
-import me.snwy.oasis.OasisPrototype
+import me.snwy.oasis.*
 import me.snwy.oasis.Optimizer.Companion.nameMap
-import me.snwy.oasis.Parser
-import me.snwy.oasis.Scanner
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -16,7 +12,8 @@ var import = Module("import") { it, _ ->
             if (Path.of("modules/$it").exists())
                 Path.of("modules/$it")
             else
-                Path.of(it))
+                Path.of(it)
+        )
         val interpreter = Interpreter()
         Scanner(module).scanTokens().also { tokens ->
             interpreter.execute(Parser(tokens).parse())

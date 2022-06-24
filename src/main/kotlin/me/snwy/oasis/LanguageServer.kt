@@ -6,15 +6,13 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
 import java.io.InputStream
 import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
+import kotlin.system.exitProcess
 
 
-class OasisLanguageServer : LanguageServer, LanguageClientAware{
+class OasisLanguageServer : LanguageServer, LanguageClientAware {
     private val textDocumentService: TextDocumentService
     override fun getTextDocumentService(): TextDocumentService {
         return textDocumentService
@@ -25,11 +23,11 @@ class OasisLanguageServer : LanguageServer, LanguageClientAware{
         return workspaceService
     }
 
-    lateinit var clientCapabilities: ClientCapabilities
+    private lateinit var clientCapabilities: ClientCapabilities
 
     lateinit var languageClient: LanguageClient
 
-    var shutdown = 1
+    private var shutdown = 1
 
     init {
         textDocumentService = OasisTextDocumentService(this)
@@ -65,7 +63,7 @@ class OasisLanguageServer : LanguageServer, LanguageClientAware{
     }
 
     override fun exit() {
-        System.exit(shutdown)
+        exitProcess(shutdown)
     }
 
     override fun connect(client: LanguageClient?) {
@@ -78,7 +76,7 @@ class OasisLanguageServer : LanguageServer, LanguageClientAware{
     }
 }
 
-class OasisWorkspaceService(val languageServer: OasisLanguageServer) : WorkspaceService {
+class OasisWorkspaceService(private val languageServer: OasisLanguageServer) : WorkspaceService {
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
         languageServer.languageClient.logMessage(MessageParams(MessageType.Info, "DidChangeConfiguration"))
     }
@@ -92,7 +90,7 @@ class OasisWorkspaceService(val languageServer: OasisLanguageServer) : Workspace
     }
 }
 
-class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDocumentService {
+class OasisTextDocumentService(private val languageServer: OasisLanguageServer) : TextDocumentService {
 
     private lateinit var text: String
     private var variables: Map<String, Any> = mutableMapOf()
@@ -118,7 +116,11 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
             text = if (it.range == null) {
                 it.text
             } else {
-                text.replaceRange(fromLineColToIndex(it.range.start.line, it.range.start.character), fromLineColToIndex(it.range.end.line, it.range.end.character), it.text)
+                text.replaceRange(
+                    fromLineColToIndex(it.range.start.line, it.range.start.character),
+                    fromLineColToIndex(it.range.end.line, it.range.end.character),
+                    it.text
+                )
             }
         }
 
@@ -129,13 +131,25 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
             parser = Parser(Scanner(text).scanTokens())
             parsed = parser.parse()
         } catch (e: ParseException) {
-            diagnostics.add(Diagnostic(Range(Position(e.line - 1, e.column), Position(e.line - 1, e.column)), e.parseMessage, DiagnosticSeverity.Error, "oasis parser"))
+            diagnostics.add(
+                Diagnostic(
+                    Range(Position(e.line - 1, e.column), Position(e.line - 1, e.column)),
+                    e.parseMessage,
+                    DiagnosticSeverity.Error,
+                    "oasis parser"
+                )
+            )
         }
         val contextVisitor = ContextVisitor()
         parsed?.accept(contextVisitor)
         variables = contextVisitor.variables
         diagnostics.addAll(contextVisitor.diagnostics)
-        languageServer.languageClient.publishDiagnostics(PublishDiagnosticsParams(params!!.textDocument.uri, diagnostics))
+        languageServer.languageClient.publishDiagnostics(
+            PublishDiagnosticsParams(
+                params!!.textDocument.uri,
+                diagnostics
+            )
+        )
         languageServer.languageClient.logMessage(MessageParams(MessageType.Info, "DidChange 2: $text"))
     }
 
@@ -158,7 +172,12 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
         }
         val line = text.lines()[position.position?.line ?: 0]
         languageServer.languageClient.logMessage(MessageParams(MessageType.Info, "Completion A: $line"))
-        languageServer.languageClient.logMessage(MessageParams(MessageType.Info, "Completion B: ${position?.position?.character} of ${line.length} with $line"))
+        languageServer.languageClient.logMessage(
+            MessageParams(
+                MessageType.Info,
+                "Completion B: ${position.position?.character} of ${line.length} with $line"
+            )
+        )
         val lineStart = if ((position.position?.character ?: 0) > line.length - 1) {
             line
         } else {
@@ -181,7 +200,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
             val candidates = ArrayList<CompletionItem>()
             variables.forEach { pair ->
                 if (pair.key.startsWith(attemptedCompletion)) {
-                    if(pair.value is PrototypeContext) {
+                    if (pair.value is PrototypeContext) {
                         (pair.value as PrototypeContext).map.forEach { pair ->
                             candidates.add(CompletionItem(pair.key).also {
                                 it.detail = pair.key
@@ -197,9 +216,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
                 }
             }
             completions.addAll(candidates)
-        }
-
-        else if (lineStart.endsWith("fn")) {
+        } else if (lineStart.endsWith("fn")) {
             completions.add(CompletionItem("fn =>").also {
                 it.detail = "fn (lambda)"
                 it.insertText = "fn(/* args */) => /* expression */"
@@ -210,9 +227,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
                 it.insertText = "fn(/* args */)\n\t/* body */\nend"
                 it.kind = CompletionItemKind.Snippet
             })
-        }
-
-        else if (lineStart.endsWith("proto")) {
+        } else if (lineStart.endsWith("proto")) {
             completions.add(CompletionItem("proto").also {
                 it.detail = "proto"
                 it.insertText = "proto\n\t/* body */\nend"
@@ -223,9 +238,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
                 it.insertText = "proto < /* superclass */\n\t/* body */\nend"
                 it.kind = CompletionItemKind.Snippet
             })
-        }
-
-        else if (lineStart.endsWith("is")) {
+        } else if (lineStart.endsWith("is")) {
             completions.add(CompletionItem("is").also {
                 it.detail = "is"
                 it.insertText = "is /* expression */\n\t/* value */ =>\n\t\t/* body */\n\tend\nend"
@@ -235,7 +248,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
         val attemptedCompletion = lineStart.split(" ", "(", ")", "[", "]", "{", "}").last()
         val candidates = ArrayList<CompletionItem>()
         variables.forEach { pair ->
-            if(attemptedCompletion.isEmpty() || pair.key.startsWith(attemptedCompletion)) {
+            if (attemptedCompletion.isEmpty() || pair.key.startsWith(attemptedCompletion)) {
                 candidates.add(CompletionItem(pair.key).also {
                     it.detail = pair.key
                     it.insertText = pair.key
@@ -259,7 +272,7 @@ class OasisLanguageServiceLauncher {
         startServer(System.`in`, System.out)
     }
 
-    fun startServer(`in`: InputStream?, out: OutputStream?) {
+    private fun startServer(`in`: InputStream?, out: OutputStream?) {
         val server = OasisLanguageServer()
         val launcher = Launcher.createLauncher(server, LanguageClient::class.java, `in`, out)
         val client = launcher.remoteProxy

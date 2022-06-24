@@ -1,25 +1,24 @@
 package me.snwy.oasis
 
-import java.util.*
 class Environment(private val enclosing: Environment? = null) {
     var values: HashMap<Int, Any?> = HashMap()
 
     fun define(name: Int, value: Any?) {
-        if(values.containsKey(name)) {
+        if (values.containsKey(name)) {
             throw RuntimeError(line, "Variable with this name already defined")
         }
         values[name] = value
     }
 
     fun define(name: String, value: Any?) {
-        if(values.containsKey(name.hashCode())) {
+        if (values.containsKey(name.hashCode())) {
             throw RuntimeError(line, "Variable with this name already defined")
         }
         values[name.hashCode()] = value
     }
 
     fun get(name: Int): Any? {
-        if(name in values) {
+        if (name in values) {
             return values[name]
         }
         if (enclosing != null) {
@@ -29,29 +28,29 @@ class Environment(private val enclosing: Environment? = null) {
     }
 
     fun assign(name: Int, value: Any?) {
-        if(name in Optimizer.immutables) {
+        if (name in Optimizer.immutables) {
             throw RuntimeError(line, "Cannot assign to immutable variable")
         }
-        if(values.containsKey(name)) {
+        if (values.containsKey(name)) {
             values[name] = value
             return
         }
-        if(enclosing != null) {
+        if (enclosing != null) {
             enclosing.assign(name, value)
             return
         }
         throw RuntimeError(line, "Undefined variable '${name}'")
     }
 
-    fun assign(name: String, value: Any?) {
-        if(name.hashCode() in Optimizer.immutables) {
+    private fun assign(name: String, value: Any?) {
+        if (name.hashCode() in Optimizer.immutables) {
             throw RuntimeError(line, "Cannot assign to immutable variable")
         }
-        if(values.containsKey(name.hashCode())) {
+        if (values.containsKey(name.hashCode())) {
             values[name.hashCode()] = value
             return
         }
-        if(enclosing != null) {
+        if (enclosing != null) {
             enclosing.assign(name, value)
             return
         }

@@ -1,6 +1,9 @@
 package me.snwy.oasis.standardLibrary
 
-import me.snwy.oasis.*
+import me.snwy.oasis.KotlinFunction2
+import me.snwy.oasis.OasisCallable
+import me.snwy.oasis.OasisPrototype
+import me.snwy.oasis.PartialFunc
 
 val func = Module("func") { it, interpreter ->
     val func = OasisPrototype(base, -1, interpreter).apply {

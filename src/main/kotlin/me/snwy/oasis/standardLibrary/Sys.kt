@@ -12,8 +12,8 @@ val sys = Module("sys") { it, interpreter ->
     val sys = OasisPrototype(base, -1, interpreter)
     sys.set("exit", KotlinFunction1(::exitProcess))
     sys.set("exec", KotlinFunction1<Unit, String> { cmd ->
-        var process = Runtime.getRuntime().exec(cmd)
-        var reader = BufferedReader(InputStreamReader(process.inputStream))
+        val process = Runtime.getRuntime().exec(cmd)
+        val reader = BufferedReader(InputStreamReader(process.inputStream))
         var line: String
         while (reader.readLine().also { line = it ?: "" } != null) {
             println(line)

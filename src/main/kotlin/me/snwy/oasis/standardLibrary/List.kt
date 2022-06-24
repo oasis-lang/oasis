@@ -8,7 +8,7 @@ val list = Module("list") { it, interpreter ->
     list.set("size", KotlinFunction1<Double, ArrayList<Any?>> { z -> z.size.toDouble() })
     list.set("remove",
         KotlinFunction2<Any?, ArrayList<Any?>, Double> { z, y ->
-            return@KotlinFunction2 z.removeAt(y.toInt());
+            return@KotlinFunction2 z.removeAt(y.toInt())
         })
     list.set("slice", KotlinFunction3<ArrayList<*>, ArrayList<Any?>, Double, Double> { x, y, z ->
         ArrayList(x.subList(y.toInt(), z.toInt()))
@@ -30,48 +30,52 @@ val list = Module("list") { it, interpreter ->
     list.set("clear", KotlinFunction1<Unit, ArrayList<Any?>> { z -> z.clear() })
     list.set("isEmpty", KotlinFunction1<Boolean, ArrayList<Any?>> { z -> z.isEmpty() })
     list.set("filter", KotlinFunction2<Collection<Any?>, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.filter {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'filter' function must return boolean")
+        x.filter { z ->
+            y.call(interpreter, listOf(z)) as? Boolean
+                ?: throw RuntimeException("'filter' function must return boolean")
         }
     })
     list.set("find", KotlinFunction2<Any?, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.find {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'find' function must return boolean")
+        x.find { z ->
+            y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'find' function must return boolean")
         }
     })
     list.set("findIndex", KotlinFunction2<Any?, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.indexOfFirst {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'findIndex' function must return boolean")
+        x.indexOfFirst { z ->
+            y.call(interpreter, listOf(z)) as? Boolean
+                ?: throw RuntimeException("'findIndex' function must return boolean")
         }
     })
     list.set("findLast", KotlinFunction2<Any?, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.findLast {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'findLast' function must return boolean")
+        x.findLast { z ->
+            y.call(interpreter, listOf(z)) as? Boolean
+                ?: throw RuntimeException("'findLast' function must return boolean")
         }
     })
     list.set("findLastIndex", KotlinFunction2<Any?, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.indexOfLast {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'findLastIndex' function must return boolean")
+        x.indexOfLast { z ->
+            y.call(interpreter, listOf(z)) as? Boolean
+                ?: throw RuntimeException("'findLastIndex' function must return boolean")
         }
     })
     list.set("map", KotlinFunction2<Collection<Any?>, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.map {
-                z -> y.call(interpreter, listOf(z))
+        x.map { z ->
+            y.call(interpreter, listOf(z))
         }
     })
     list.set("reduce", KotlinFunction3<Any?, Collection<Any?>, OasisCallable, OasisCallable> { interpreter, x, y, z ->
-        x.reduce {
-                a, b -> y.call(interpreter, listOf(a, b))
+        x.reduce { a, b ->
+            y.call(interpreter, listOf(a, b))
         }
     })
     list.set("every", KotlinFunction2<Boolean, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.all {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'every' function must return boolean")
+        x.all { z ->
+            y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'every' function must return boolean")
         }
     })
     list.set("some", KotlinFunction2<Boolean, Collection<Any?>, OasisCallable> { interpreter, x, y ->
-        x.any {
-                z -> y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'some' function must return boolean")
+        x.any { z ->
+            y.call(interpreter, listOf(z)) as? Boolean ?: throw RuntimeException("'some' function must return boolean")
         }
     })
     it.define("list", list)

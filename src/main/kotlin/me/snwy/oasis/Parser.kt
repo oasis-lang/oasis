@@ -2,7 +2,6 @@ package me.snwy.oasis
 
 import me.snwy.oasis.TokenType.*
 import java.util.*
-import kotlin.collections.ArrayList
 
 class Parser(val tokens: List<Token>) {
     var current: Int = 0
@@ -38,11 +37,17 @@ class Parser(val tokens: List<Token>) {
 
     private fun eat(type: TokenType): Token {
         if (!peek(type)) {
-            error(tokens[current].line, tokens[current].column, "Unexpected ${if(tokens[current].lexeme == "" || tokens[current].lexeme == " ") "space" else tokens[current].lexeme.lowercase(
-                Locale.getDefault()
-            )}, expected ${AorAn(
-                type.name.lowercase(Locale.getDefault())
-            )}")
+            error(
+                tokens[current].line, tokens[current].column, "Unexpected ${
+                    if (tokens[current].lexeme == "" || tokens[current].lexeme == " ") "space" else tokens[current].lexeme.lowercase(
+                        Locale.getDefault()
+                    )
+                }, expected ${
+                    AorAn(
+                        type.name.lowercase(Locale.getDefault())
+                    )
+                }"
+            )
         }
         return tokens[current++]
     }
@@ -63,9 +68,12 @@ class Parser(val tokens: List<Token>) {
         eat(RIGHT_PAREN)
         if (peek(LAMBDA_ARROW)) {
             eat(LAMBDA_ARROW)
-            val body = StmtList(listOf(
-                                RetStmt(expression(), begin, column)),
-                begin, column)
+            val body = StmtList(
+                listOf(
+                    RetStmt(expression(), begin, column)
+                ),
+                begin, column
+            )
             return Func(operands, body, begin, column)
         }
         val body: ArrayList<Stmt> = ArrayList()
@@ -88,7 +96,7 @@ class Parser(val tokens: List<Token>) {
         val body: ArrayList<Stmt> = ArrayList()
         while (!peek(END)) {
             var column: Int
-            if(peek(LET))
+            if (peek(LET))
                 body.add(lets())
             else
                 body.add(
@@ -123,7 +131,7 @@ class Parser(val tokens: List<Token>) {
         } else if (peek(STRING)) {
             var column: Int
             result = Literal(eat(STRING).also { column = it.column }.literal, begin, column)
-        } else if(peek(CHAR)) {
+        } else if (peek(CHAR)) {
             var column: Int
             result = Literal(eat(CHAR).also { column = it.column }.literal, begin, column)
         } else if (peek(BYTE)) {
@@ -161,19 +169,19 @@ class Parser(val tokens: List<Token>) {
             result = OasisList(body, begin, column)
         } else if (peek(LBRACE)) {
             result = listComprehension()
-        } else if(peek(MINUS)) {
+        } else if (peek(MINUS)) {
             var column: Int
             eat(MINUS).also { column = it.column }
             result = Negate(expression(), begin, column)
-        } else if(peek(NEW)) {
+        } else if (peek(NEW)) {
             var column: Int
             eat(NEW).also { column = it.column }
             result = New(expression(), begin, column)
-        } else if(peek(NOT)){
+        } else if (peek(NOT)) {
             var column: Int
             eat(NOT).also { column = it.column }
             result = Not(expression(), begin, column)
-        } else if(peek(IF)) {
+        } else if (peek(IF)) {
             var column: Int
             eat(IF).also { column = it.column }
             val condition = expression()
@@ -191,21 +199,26 @@ class Parser(val tokens: List<Token>) {
         }
         if (peek(COLON)) {
             eat(COLON)
-            if(peek(IDENTIFIER)) {
+            if (peek(IDENTIFIER)) {
                 val ident = eat(IDENTIFIER)
                 result = if (peek(LEFT_PAREN)) {
                     val fcalle = fcall()
-                    FCallExpr(Property(result, ident, begin, result.column), fcalle.operands, fcalle.line, fcalle.column, fcalle.splat)
+                    FCallExpr(
+                        Property(result, ident, begin, result.column),
+                        fcalle.operands,
+                        fcalle.line,
+                        fcalle.column,
+                        fcalle.splat
+                    )
                 } else
                     Property(result, ident, begin, result.column)
-            }
-            else if(peek(LEFT_PAREN)) {
+            } else if (peek(LEFT_PAREN)) {
                 eat(LEFT_PAREN)
                 result = Indexer(result, expression(), begin, eat(RIGHT_PAREN).column)
             }
             while (peek(COLON)) {
                 eat(COLON)
-                if(peek(IDENTIFIER)) {
+                if (peek(IDENTIFIER)) {
                     val ident = eat(IDENTIFIER)
                     result = if (peek(LEFT_PAREN)) {
                         val fcalle = fcall()
@@ -218,8 +231,7 @@ class Parser(val tokens: List<Token>) {
                         )
                     } else
                         Property(result, ident, begin, result.column)
-                }
-                else if(peek(LEFT_PAREN)) {
+                } else if (peek(LEFT_PAREN)) {
                     eat(LEFT_PAREN)
                     result = Indexer(result, expression(), begin, result.column)
                     eat(RIGHT_PAREN)
@@ -234,19 +246,63 @@ class Parser(val tokens: List<Token>) {
             when (tokens[current].type) {
                 PLUS_EQUAL -> {
                     eat(PLUS_EQUAL)
-                    result = AssignmentExpr(result, BinOp(result, Token.create(PLUS, begin, tokens[current].column), expression(), begin, result.column), begin, result.column)
+                    result = AssignmentExpr(
+                        result,
+                        BinOp(
+                            result,
+                            Token.create(PLUS, begin, tokens[current].column),
+                            expression(),
+                            begin,
+                            result.column
+                        ),
+                        begin,
+                        result.column
+                    )
                 }
                 MINUS_EQUAL -> {
                     eat(MINUS_EQUAL)
-                    result = AssignmentExpr(result, BinOp(result, Token.create(MINUS, begin, tokens[current].column), expression(), begin, result.column), begin, result.column)
+                    result = AssignmentExpr(
+                        result,
+                        BinOp(
+                            result,
+                            Token.create(MINUS, begin, tokens[current].column),
+                            expression(),
+                            begin,
+                            result.column
+                        ),
+                        begin,
+                        result.column
+                    )
                 }
                 STAR_EQUAL -> {
                     eat(STAR_EQUAL)
-                    result = AssignmentExpr(result, BinOp(result, Token.create(STAR, begin, tokens[current].column), expression(), begin, result.column), begin, result.column)
+                    result = AssignmentExpr(
+                        result,
+                        BinOp(
+                            result,
+                            Token.create(STAR, begin, tokens[current].column),
+                            expression(),
+                            begin,
+                            result.column
+                        ),
+                        begin,
+                        result.column
+                    )
                 }
                 SLASH_EQUAL -> {
                     eat(SLASH_EQUAL)
-                    result = AssignmentExpr(result, BinOp(result, Token.create(SLASH, begin, tokens[current].column), expression(), begin, result.column), begin, result.column)
+                    result = AssignmentExpr(
+                        result,
+                        BinOp(
+                            result,
+                            Token.create(SLASH, begin, tokens[current].column),
+                            expression(),
+                            begin,
+                            result.column
+                        ),
+                        begin,
+                        result.column
+                    )
                 }
                 else -> {
                     error(tokens[current].line, "This should not happen. Please report this bug.")
@@ -296,9 +352,11 @@ class Parser(val tokens: List<Token>) {
             val values = arrayListOf(Pair(func, value))
             while (!peek(RBRACE)) {
                 eat(COMMA)
-                values.add(Pair(
-                    expression().also { eat(PIPE) },
-                    expression())
+                values.add(
+                    Pair(
+                        expression().also { eat(PIPE) },
+                        expression()
+                    )
                 )
             }
             eat(RBRACE)
@@ -323,19 +381,19 @@ class Parser(val tokens: List<Token>) {
         } else if (peek(RETURN)) {
             eat(RETURN).also { column = it.column }
             RetStmt(if (!peek(END)) expression() else null, begin, column)
-        } else if(peek(IS)) {
+        } else if (peek(IS)) {
             iss()
-        } else if(peek(TEST)) {
+        } else if (peek(TEST)) {
             test()
-        } else if(peek(FOR)) {
+        } else if (peek(FOR)) {
             forl()
-        } else if(peek(BREAK)) {
+        } else if (peek(BREAK)) {
             eat(BREAK).also { column = it.column }
             return BreakStmt(begin, column)
-        } else if(peek(CONTINUE)) {
+        } else if (peek(CONTINUE)) {
             eat(CONTINUE).also { column = it.column }
             return ContinueStmt(begin, column)
-        } else if(peek(REL)) {
+        } else if (peek(REL)) {
             rel()
         } else {
             ExprStmt(expression().also { column = it.column }, begin, column)
@@ -350,7 +408,7 @@ class Parser(val tokens: List<Token>) {
         val name = eat(IDENTIFIER)
         eat(EQUAL)
         val value = expression()
-        return RelStmt(name, value,  begin, column)
+        return RelStmt(name, value, begin, column)
     }
 
     private fun test(): Test {
@@ -358,7 +416,7 @@ class Parser(val tokens: List<Token>) {
         val column: Int
         eat(TEST).also { column = it.column }
         val testBody = ArrayList<Stmt>()
-        while(!peek(ERROR)) {
+        while (!peek(ERROR)) {
             testBody.add(statement())
         }
         eat(ERROR)
@@ -366,11 +424,17 @@ class Parser(val tokens: List<Token>) {
         val errorVar = eat(IDENTIFIER)
         eat(RIGHT_PAREN)
         val errorBody = ArrayList<Stmt>()
-        while(!peek(END)) {
+        while (!peek(END)) {
             errorBody.add(statement())
         }
         eat(END)
-        return Test(StmtList(testBody, begin, column), StmtList(errorBody, errorVar.line, errorVar.column), errorVar, begin, column)
+        return Test(
+            StmtList(testBody, begin, column),
+            StmtList(errorBody, errorVar.line, errorVar.column),
+            errorVar,
+            begin,
+            column
+        )
     }
 
     private fun forl(): Stmt {
@@ -379,26 +443,31 @@ class Parser(val tokens: List<Token>) {
             column = it.column
         }
         val first = statement()
-        if(peek(IN)) {
+        if (peek(IN)) {
             eat(IN)
             val second = expression()
             val body = ArrayList<Stmt>()
-            while(!peek(END)) {
+            while (!peek(END)) {
                 body.add(statement())
             }
             eat(END)
             if (first !is ExprStmt || first.expr !is Variable) {
-                error(first.line, first.column,"Expected name for loop variable")
+                error(first.line, first.column, "Expected name for loop variable")
             }
-            return ForLoopIterator((first as ExprStmt).expr, second, StmtList(body, first.line, first.column), first.line, column)
-        }
-        else {
+            return ForLoopIterator(
+                (first as ExprStmt).expr,
+                second,
+                StmtList(body, first.line, first.column),
+                first.line,
+                column
+            )
+        } else {
             eat(PIPE)
             val cond = expression()
             eat(PIPE)
             val step = statement()
             val body = ArrayList<Stmt>()
-            while(!peek(END)) {
+            while (!peek(END)) {
                 body.add(statement())
             }
             eat(END)
@@ -448,7 +517,7 @@ class Parser(val tokens: List<Token>) {
             val thisColumn = caseExpr.column
             eat(LAMBDA_ARROW)
             val caseBody = ArrayList<Stmt>()
-            while(!peek(END)) {
+            while (!peek(END)) {
                 caseBody.add(statement())
             }
             eat(END)
@@ -471,7 +540,7 @@ class Parser(val tokens: List<Token>) {
             var thisColumn = 0
             eat(ELSE).also { thisColumn = it.column }
             val caseBody = ArrayList<Stmt>()
-            while(!peek(END)) {
+            while (!peek(END)) {
                 caseBody.add(statement())
             }
             eat(END)

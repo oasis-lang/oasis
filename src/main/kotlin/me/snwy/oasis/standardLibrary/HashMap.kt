@@ -1,4 +1,5 @@
 package me.snwy.oasis.standardLibrary
+
 import me.snwy.oasis.*
 
 val hashmap = Module("map") { it, _ ->
