@@ -1,10 +1,7 @@
 package me.snwy.oasis.standardLibrary
 
-import me.snwy.oasis.KotlinFunction0
-import me.snwy.oasis.KotlinFunction1
-import me.snwy.oasis.KotlinFunction2
-import me.snwy.oasis.OasisCallable
-import me.snwy.oasis.OasisPrototype
+import com.fazecast.jSerialComm.SerialPort
+import me.snwy.oasis.*
 import java.io.File
 import java.io.FileReader
 import java.io.RandomAccessFile
@@ -56,6 +53,38 @@ val io = Module("io") { it, interpreter ->
         y.call(
             it1, listOf(z))
     })})
+    io.set("serial", KotlinFunction0 { interpreter ->
+        val result = arrayListOf<Any?>()
+        SerialPort.getCommPorts().forEach {
+            result.add(OasisPrototype(base, line, interpreter).apply {
+                set("__port", it)
+                set("name", it.systemPortName)
+                set("description", it.portDescription)
+                set("isOpen", KotlinFunction0(it::isOpen))
+                set("open", KotlinFunction0(it::openPort))
+                set("close", KotlinFunction0(it::closePort))
+                set("writeStr", KotlinFunction1<Unit, String> { x -> it.writeBytes(x.toByteArray(Charset.defaultCharset()), x.length.toLong()) })
+                set("writeBytes", KotlinFunction1<Unit, ByteArray> { x -> it.writeBytes(x, x.size.toLong()) })
+                set("readBytes", KotlinFunction1<ByteArray, Double> { x ->
+                    val result = ByteArray(x.toInt())
+                    it.readBytes(result, x.toLong())
+                    result
+                })
+                set("readStr", KotlinFunction1<String, Double> { x ->
+                    val result = ByteArray(x.toInt())
+                    it.readBytes(result, x.toLong())
+                    result.toString(Charset.defaultCharset())
+                })
+                set("writeByte", KotlinFunction1<Unit, UByte> { x -> it.writeBytes(byteArrayOf(x.toByte()), 1) })
+                set("readByte", KotlinFunction0<UByte> { _ ->
+                    val result = ByteArray(1)
+                    it.readBytes(result, 1)
+                    result[0].toUByte()
+                })
+            })
+        }
+        result
+    })
     socket.set("open", KotlinFunction1(::constructSocket))
     socket.set("connect", KotlinFunction2(::socketConnect))
     io.set("socket", socket)

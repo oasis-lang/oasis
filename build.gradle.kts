@@ -19,6 +19,7 @@ dependencies {
     implementation("org.jline:jline-terminal:3.21.0")
     implementation("org.knowm.xchart:xchart:3.8.1")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0")
+    implementation("com.fazecast:jSerialComm:2.9.1")
 }
 
 tasks.withType<KotlinCompile> {
