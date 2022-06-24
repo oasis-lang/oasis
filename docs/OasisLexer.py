@@ -20,7 +20,7 @@ class OasisLexer(RegexLexer):
             (r'\b(return)\b', Keyword),
             (r'\b(true|false)\b', Keyword.Type),
             (r'\b(nil)\b', Keyword.Constant),
-            (r'\b(let|immutable)\b', Keyword.Declaration),
+            (r'\b(let|immutable|rel)\b', Keyword.Declaration),
             (r'\b(proto)\b', Keyword),
             (r'\b(fn)\b', Keyword),
             (r'\b(end)\b', Keyword),
