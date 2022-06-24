@@ -174,4 +174,8 @@ class PythonTranspiler : me.snwy.oasis.Expr.Visitor<String>, me.snwy.oasis.Stmt.
     override fun visitIfExpression(ifExpression: IfExpression): String {
         TODO("Not yet implemented")
     }
+
+    override fun visitRelStmt(relstmt: RelStmt): String {
+        TODO("Not yet implemented")
+    }
 }

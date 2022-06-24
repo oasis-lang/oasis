@@ -9,42 +9,49 @@ data class Or<A, B>(val a: A?, val b: B?)
 
 class PrototypeContext(val prototype: Proto, val visitor: ContextVisitor) {
     val map = mutableMapOf<String, Any>()
+
     init {
         map.putAll(prototype.accept(visitor).a!!)
     }
+
     fun get(key: String): Any? = map[key]
 }
 
 object stdMap {
     val map = mutableMapOf<String, Any>()
+
     init {
-        map.putAll(mapOf(
+        map.putAll(
+            mapOf(
                 "io" to Unit,
-            "string" to Unit,
-              "time" to Unit,
-              "math" to Unit,
-              "type" to Unit,
-              "list" to Unit,
-             "range" to Unit,
-               "sys" to Unit,
-               "map" to Unit,
-              "json" to Unit,
-         "prototype" to Unit,
-             "async" to Unit,
-               "api" to Unit,
-            "import" to Unit,
-              "func" to Unit,
-             "panic" to Unit,
-              "plot" to Unit,
-        ))
+                "string" to Unit,
+                "time" to Unit,
+                "math" to Unit,
+                "type" to Unit,
+                "list" to Unit,
+                "range" to Unit,
+                "sys" to Unit,
+                "map" to Unit,
+                "json" to Unit,
+                "prototype" to Unit,
+                "async" to Unit,
+                "api" to Unit,
+                "import" to Unit,
+                "func" to Unit,
+                "panic" to Unit,
+                "plot" to Unit,
+            )
+        )
     }
 }
 
 class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visitor<Unit> {
 
     val variables = hashMapOf<String, Any>()
+    val immutables = ArrayList<String>()
+    val rels = ArrayList<String>()
 
-    private val prototypes = hashMapOf<String,PrototypeContext>()
+    private val prototypes = hashMapOf<String, PrototypeContext>()
 
     val diagnostics = arrayListOf<Diagnostic>()
 
@@ -59,12 +66,33 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
     }
 
     override fun visitAssignment(assignment: AssignmentExpr): Or<HashMap<String, Any>, Unit> {
-        when(assignment.left) {
+        when (assignment.left) {
             is Variable -> {
+                if (immutables.contains((assignment.left as Variable).name.lexeme)) {
+                    diagnostics.add(
+                        Diagnostic(
+                            Range(Position(0, 0), Position(0, 0)),
+                            "Variable is marked immutable",
+                            DiagnosticSeverity.Error,
+                            "oasis"
+                        )
+                    )
+                }
+                if(rels.contains((assignment.left as Variable).name.lexeme)) {
+                    diagnostics.add(
+                        Diagnostic(
+                            Range(Position(0, 0), Position(0, 0)),
+                            "Can't reassign relative expression",
+                            DiagnosticSeverity.Error,
+                            "oasis"
+                        )
+                    )
+                }
                 assignment.left.accept(this)
-                when(assignment.value) {
+                when (assignment.value) {
                     is Proto -> {
-                        prototypes[(assignment.left as Variable).name.lexeme] = PrototypeContext(assignment.value as Proto, this)
+                        prototypes[(assignment.left as Variable).name.lexeme] =
+                            PrototypeContext(assignment.value as Proto, this)
                     }
                 }
             }
@@ -87,12 +115,21 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     override fun visitProperty(property: Property): Or<HashMap<String, Any>, Unit> = _NO_VALUE
 
-    override fun visitFunc(func: Func): Or<HashMap<String, Any>, Unit>  {
+    override fun visitFunc(func: Func): Or<HashMap<String, Any>, Unit> {
         func.operands.forEach {
             if (variables.containsKey(it.lexeme)) {
-                diagnostics.add(Diagnostic(Range(Position(it.line - 1, it.column - 1), Position(it.line - 1, it.column - 1 + it.lexeme.length)), "Variable ${it.lexeme} already defined", DiagnosticSeverity.Warning, "oasis"),)
+                diagnostics.add(
+                    Diagnostic(
+                        Range(
+                            Position(it.line - 1, it.column - 1),
+                            Position(it.line - 1, it.column - 1 + it.lexeme.length)
+                        ), "Variable ${it.lexeme} already defined", DiagnosticSeverity.Warning, "oasis"
+                    ),
+                )
             } else {
-                variables[it.lexeme] = object { override fun toString() = "DefinedToken" }
+                variables[it.lexeme] = object {
+                    override fun toString() = "DefinedToken"
+                }
             }
         }
         func.body.accept(this)
@@ -115,7 +152,14 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     override fun visitVariable(variable: Variable): Or<HashMap<String, Any>, Unit> {
         if (!variables.containsKey(variable.name.lexeme)) {
-            diagnostics.add(Diagnostic(Range(Position(variable.line - 1, variable.column - 1), Position(variable.line - 1, variable.column - 1 + variable.name.lexeme.length)), "Undefined variable ${variable.name.lexeme}", DiagnosticSeverity.Error, "oasis"))
+            diagnostics.add(
+                Diagnostic(
+                    Range(
+                        Position(variable.line - 1, variable.column - 1),
+                        Position(variable.line - 1, variable.column - 1 + variable.name.lexeme.length)
+                    ), "Undefined variable ${variable.name.lexeme}", DiagnosticSeverity.Error, "oasis"
+                )
+            )
         }
         return _NO_VALUE
     }
@@ -125,9 +169,9 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
     override fun visitProto(proto: Proto): Or<HashMap<String, Any>, Unit> {
         val map = hashMapOf<String, Any>()
         proto.body.stmts.forEach {
-            when(it) {
+            when (it) {
                 is Let -> {
-                    when(it.value) {
+                    when (it.value) {
                         is Proto -> {
                             map[it.left.lexeme] = PrototypeContext(it.value as Proto, this)
                         }
@@ -137,16 +181,18 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
                     }
                 }
                 is ExprStmt -> {
-                    when(it.expr) {
+                    when (it.expr) {
                         is AssignmentExpr -> {
-                            when((it.expr as AssignmentExpr).left) {
+                            when ((it.expr as AssignmentExpr).left) {
                                 is Variable -> {
-                                    when((it.expr as AssignmentExpr).value) {
+                                    when ((it.expr as AssignmentExpr).value) {
                                         is Proto -> {
-                                            map[((it.expr as AssignmentExpr).left as Variable).name.lexeme] = PrototypeContext((it.expr as AssignmentExpr).value as Proto, this)
+                                            map[((it.expr as AssignmentExpr).left as Variable).name.lexeme] =
+                                                PrototypeContext((it.expr as AssignmentExpr).value as Proto, this)
                                         }
                                         else -> {
-                                            map[((it.expr as AssignmentExpr).left as Variable).name.lexeme] = (it.expr as AssignmentExpr).value
+                                            map[((it.expr as AssignmentExpr).left as Variable).name.lexeme] =
+                                                (it.expr as AssignmentExpr).value
                                         }
                                     }
                                 }
@@ -181,9 +227,19 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     override fun visitLet(let: Let) {
         if (let.left.lexeme in variables) {
-            diagnostics.add(Diagnostic(Range(Position(let.line - 1, let.column - 1), Position(let.value.line - 1, let.value.column - 1)), "Variable already defined", DiagnosticSeverity.Error, "oasis"))
+            diagnostics.add(
+                Diagnostic(
+                    Range(
+                        Position(let.line - 1, let.column - 1),
+                        Position(let.value.line - 1, let.left.column + let.left.lexeme.length - 1)
+                    ), "Variable already defined", DiagnosticSeverity.Error, "oasis"
+                )
+            )
         }
-        variables[let.left.lexeme] = if(let.value is Proto) {
+        if (let.immutable) {
+            immutables.add(let.left.lexeme)
+        }
+        variables[let.left.lexeme] = if (let.value is Proto) {
             PrototypeContext(let.value as Proto, this)
         } else {
             let.value
@@ -235,7 +291,25 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     override fun visitForLoopIterator(forLoopIterator: ForLoopIterator) {
         if ((forLoopIterator.varName as Variable).name.lexeme in variables) {
-            diagnostics.add(Diagnostic(Range(Position(forLoopIterator.line - 1, forLoopIterator.column - 1), Position(forLoopIterator.line - 1, forLoopIterator.column - 1 + (forLoopIterator.varName as Variable).name.lexeme.length)), "Variable already defined", DiagnosticSeverity.Warning, "oasis"))
+            diagnostics.add(
+                Diagnostic(
+                    Range(
+                        Position(forLoopIterator.line - 1, forLoopIterator.column - 1),
+                        Position(
+                            forLoopIterator.line - 1,
+                            (forLoopIterator.varName as Variable).column - 1 + (forLoopIterator.varName as Variable).name.lexeme.length
+                        )
+                    ), "Variable already defined", DiagnosticSeverity.Warning, "oasis"
+                )
+            )
+        } else {
+            variables[(forLoopIterator.varName as Variable).name.lexeme] = object {
+                override fun toString() = "DefinedToken"
+            }
+        }
+        forLoopIterator.body.accept(this)
+        if (variables[(forLoopIterator.varName as Variable).name.lexeme].toString() == "DefinedToken") {
+            variables.remove((forLoopIterator.varName as Variable).name.lexeme)
         }
     }
 
@@ -245,6 +319,22 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     override fun visitContinueStmt(continue_: ContinueStmt) {
         // nothing
+    }
+
+    override fun visitRelStmt(relstmt: RelStmt) {
+        if (relstmt.name.lexeme in variables) {
+            diagnostics.add(
+                Diagnostic(
+                    Range(
+                        Position(relstmt.line - 1, relstmt.column - 1),
+                        Position(relstmt.line - 1, relstmt.name.column - 1 + relstmt.name.lexeme.length)
+                    ), "Relative expression can't share name with variable", DiagnosticSeverity.Error, "oasis"
+                )
+            )
+        } else {
+            variables[relstmt.name.lexeme] = relstmt.expr
+            rels.add(relstmt.name.lexeme)
+        }
     }
 
 }

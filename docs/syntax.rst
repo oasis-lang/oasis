@@ -30,6 +30,22 @@ You can also modify a variable's value by using the different forms of the ``=``
     foo += 1
     foo -= 1
 
+**Relative Expressions**
+A relative expression is an expression that is evaluated whenever it's used.
+It's titled so because it's an expression relative to another.
+
+.. code-block:: oasis
+
+    let foo = 12
+    rel bar = foo * 2
+
+    io:print(bar) // 24
+    foo = 13
+    io:print(bar) // 26
+
+A relative expression cannot share a name with a variable.
+Relative expressions are
+
 ********
 Indexing
 ********

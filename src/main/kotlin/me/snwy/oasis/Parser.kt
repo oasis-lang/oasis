@@ -335,10 +335,22 @@ class Parser(val tokens: List<Token>) {
         } else if(peek(CONTINUE)) {
             eat(CONTINUE).also { column = it.column }
             return ContinueStmt(begin, column)
+        } else if(peek(REL)) {
+            rel()
         } else {
             ExprStmt(expression().also { column = it.column }, begin, column)
         }
         return result
+    }
+
+    private fun rel(): Stmt {
+        val begin = tokens[current].line
+        val column: Int
+        eat(REL).also { column = it.column }
+        val name = eat(IDENTIFIER)
+        eat(EQUAL)
+        val value = expression()
+        return RelStmt(name, value,  begin, column)
     }
 
     private fun test(): Test {

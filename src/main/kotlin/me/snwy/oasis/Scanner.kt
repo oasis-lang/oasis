@@ -34,6 +34,7 @@ class Scanner(private val source: String) {
         "continue" to CONTINUE,
         "in" to IN,
         "of" to OF,
+        "rel" to REL,
     )
 
     private fun error(line: Int, column: Int, msg: String) {
@@ -104,20 +105,23 @@ class Scanner(private val source: String) {
     }
 
     private fun hex() {
+        val column = this.column
         while (CharRange('0', '9').contains(peek()) || CharRange('a', 'f').contains(peek()) || CharRange('A', 'F').contains(peek()))
             advance()
-        addToken(BYTE, Integer.parseInt(source.substring(start + 2, current), 16).toUByte())
+        addToken(BYTE, Integer.parseInt(source.substring(start + 2, current), 16).toUByte(), column)
     }
 
     private fun identifier() {
+        val column = this.column
         while(peek().isDigit() || peek().isLetter() || peek() == '_') advance()
         val text: String = source.substring(start, current)
         var type: TokenType? = keywords[text]
         if(type == null) type = IDENTIFIER
-        addToken(type)
+        addToken(type, null, column)
     }
 
     private fun string() {
+        var column = this.column
         while (peek() != '"' && !isAtEnd()) {
             if(peek() == '\n') { line++; column = 0 }
             if(peek() == '\\') {
@@ -139,16 +143,17 @@ class Scanner(private val source: String) {
             .replace("\\n", "\n")
             .replace("\\t", "\t")
             .replace("\\\"", "\"")
-        addToken(STRING, value)
+        addToken(STRING, value, column)
     }
 
     private fun char() {
+        val column = this.column
         val c: Char = advance()
         if (advance() != '\'') {
             error(line, column, "Unterminated char literal.")
             return
         }
-        addToken(CHAR, c)
+        addToken(CHAR, c, column)
     }
 
     private fun peek(): Char {
@@ -162,12 +167,13 @@ class Scanner(private val source: String) {
     }
 
     private fun number(negative: Boolean = false){
+        val column = this.column
         while(peek().isDigit()) advance()
         if(peek() == '.' && peekNext().isDigit()) {
             advance()
             while(peek().isDigit()) advance()
         }
-        addToken(NUMBER, if (!negative) source.substring(start, current).toDouble() else -( source.substring(start, current).toDouble()) )
+        addToken(NUMBER, if (!negative) source.substring(start, current).toDouble() else -( source.substring(start, current).toDouble()), column)
     }
 
     private fun match(expected: Char): Boolean {
@@ -187,6 +193,11 @@ class Scanner(private val source: String) {
     }
 
     private fun addToken(type: TokenType, literal: Any?) {
+        val text: String = source.substring(start, current)
+        tokens.add(Token(type, text, literal, line, column))
+    }
+
+    private fun addToken(type: TokenType, literal: Any?, column: Int) {
         val text: String = source.substring(start, current)
         tokens.add(Token(type, text, literal, line, column))
     }

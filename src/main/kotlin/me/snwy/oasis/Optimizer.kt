@@ -456,4 +456,9 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         return ifExpression
     }
 
+    override fun visitRelStmt(relstmt: RelStmt): Stmt {
+        relstmt.expr = relstmt.expr.accept(this)
+        return relstmt
+    }
+
 }

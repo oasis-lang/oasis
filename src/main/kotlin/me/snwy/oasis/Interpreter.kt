@@ -44,12 +44,24 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitAssignment(assignment: AssignmentExpr): Any? {
-        val a = eval(assignment.value)
+        var a: Any? = null
         when(assignment.left) {
-            is Property -> (eval((assignment.left as Property).obj) as OasisPrototype).set((assignment.left as Property).indexer.lexeme, a)
-            is Variable -> environment.assign(assignment.left.hashCode(), a)
-            is Precomputed -> environment.assign((assignment.left as Precomputed).hash, a)
+            is Property -> { a = eval(assignment.value); (eval((assignment.left as Property).obj) as OasisPrototype).set((assignment.left as Property).indexer.lexeme, a) }
+            is Variable -> {
+                 a = eval(assignment.value)
+                environment.assign(assignment.left.hashCode(), a)
+            }
+            is Precomputed -> {
+                val left = environment.get((assignment.left as Precomputed).hash)
+                if(left is RelativeExpression) {
+                    left.expr = assignment.value
+                } else {
+                    a = eval(assignment.value)
+                    environment.assign((assignment.left as Precomputed).hash, a)
+                }
+            }
             is Indexer -> {
+                a = eval(assignment.value)
                 when(val indexer = eval((assignment.left as Indexer).expr)) {
                     is ArrayList<*> -> (indexer as ArrayList<Any?>)[
                             (eval((assignment.left as Indexer).index) as Double).toInt()
@@ -61,7 +73,6 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                     else -> throw RuntimeError(assignment.line, "Cannot index")
                 }
             }
-
             else -> {
                 throw RuntimeError(assignment.line, "Cannot assign")
             }
@@ -237,7 +248,11 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitVariable(variable: Variable): Any? {
-        return environment.get(variable.name.lexeme.hashCode())
+        val result = environment.get(variable.name.lexeme.hashCode())
+        if(result is RelativeExpression) {
+            return result.expr.accept(this)
+        }
+        return result
     }
 
     override fun visitProto(proto: Proto): Any {
@@ -361,7 +376,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun vistPrecomputed(precomputed: Precomputed): Any? {
-        return environment.get(precomputed.hash)
+        environment.get(precomputed.hash).let {
+            if(it is RelativeExpression) {
+                return it.expr.accept(this)
+            }
+            return it
+        }
     }
 
     override fun visitForLoopTriad(forLoopTriad: ForLoopTriad) {
@@ -456,10 +476,14 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitIfExpression(ifExpression: IfExpression): Any? {
-        if (isTruthy(eval(ifExpression.expr))) {
-            return eval(ifExpression.thenExpr)
+        return if (isTruthy(eval(ifExpression.expr))) {
+            eval(ifExpression.thenExpr)
         } else {
-            return eval(ifExpression.elseExpr)
+            eval(ifExpression.elseExpr)
         }
+    }
+
+    override fun visitRelStmt(relstmt: RelStmt) {
+        environment.define(relstmt.name.lexeme.hashCode(), RelativeExpression(relstmt.expr))
     }
 }

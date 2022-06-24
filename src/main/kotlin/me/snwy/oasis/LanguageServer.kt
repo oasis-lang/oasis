@@ -124,7 +124,7 @@ class OasisTextDocumentService(val languageServer: OasisLanguageServer) : TextDo
 
         val diagnostics = mutableListOf<Diagnostic>()
         var parsed: Stmt? = null
-        var parser: Parser? = null
+        val parser: Parser?
         try {
             parser = Parser(Scanner(text).scanTokens())
             parsed = parser.parse()

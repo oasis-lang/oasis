@@ -225,4 +225,8 @@ class BytecodeCompiler : me.snwy.oasis.Expr.Visitor<Unit>, me.snwy.oasis.Stmt.Vi
     override fun visitIfExpression(ifExpression: IfExpression) {
         TODO("Not yet implemented")
     }
+
+    override fun visitRelStmt(relstmt: RelStmt) {
+        TODO("Not yet implemented")
+    }
 }

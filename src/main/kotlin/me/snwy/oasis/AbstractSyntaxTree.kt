@@ -42,6 +42,7 @@ abstract class Stmt(var line: Int, var column: Int) {
         fun visitForLoopIterator(forLoopIterator: ForLoopIterator): T
         fun visitBreakStmt(break_: BreakStmt): T
         fun visitContinueStmt(continue_: ContinueStmt): T
+        fun visitRelStmt(relstmt: RelStmt): T
     }
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
@@ -271,5 +272,11 @@ class BreakStmt(line: Int, column: Int): Stmt(line, column) {
 class ContinueStmt(line: Int, column: Int): Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitContinueStmt(this)
+    }
+}
+
+class RelStmt(var name: Token, var expr: Expr, line: Int, column: Int): Stmt(line, column) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitRelStmt(this)
     }
 }
