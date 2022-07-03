@@ -167,7 +167,7 @@ Prototypes also only exist in literal form.
 
     // Prototypes can also inherit
 
-    let bar = proto > foo
+    let bar = proto : foo
         z = 5
     end
 
