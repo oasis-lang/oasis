@@ -22,7 +22,11 @@ class KotlinFunction1<T, A>(val function: (interpreter: Interpreter, A) -> T) : 
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        return function(interpreter, arguments[0] as A)
+        try {
+            return function(interpreter, arguments[0] as A)
+        } catch (e: ClassCastException) {
+            throw RuntimeError(line, "Invalid argument type")
+        }
     }
 
     override fun arity(): Int {
@@ -39,7 +43,11 @@ class KotlinFunction2<T, A, B>(val function: (interpreter: Interpreter, a: A, b:
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        return function(interpreter, arguments[0] as A, arguments[1] as B)
+        try {
+            return function(interpreter, arguments[0] as A, arguments[1] as B)
+        } catch (e: ClassCastException) {
+            throw RuntimeError(line, "Invalid argument type")
+        }
     }
 
     override fun arity(): Int {
@@ -56,7 +64,11 @@ class KotlinFunction3<T, A, B, C>(val function: (interpreter: Interpreter, a: A,
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        return function(interpreter, arguments[0] as A, arguments[1] as B, arguments[2] as C)
+        try {
+            return function(interpreter, arguments[0] as A, arguments[1] as B, arguments[2] as C)
+        } catch (e: ClassCastException) {
+            throw RuntimeError(line, "Invalid argument type")
+        }
     }
 
     override fun arity(): Int {
@@ -74,7 +86,11 @@ class KotlinFunction4<T, A, B, C, D>(val function: (interpreter: Interpreter, a:
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        return function(interpreter, arguments[0] as A, arguments[1] as B, arguments[2] as C, arguments[3] as D)
+        try {
+            return function(interpreter, arguments[0] as A, arguments[1] as B, arguments[2] as C, arguments[3] as D)
+        } catch (e: ClassCastException) {
+            throw RuntimeError(line, "Invalid argument type")
+        }
     }
 
     override fun arity(): Int {
@@ -92,14 +108,18 @@ class KotlinFunction5<T, A, B, C, D, E>(val function: (interpreter: Interpreter,
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
-        return function(
-            interpreter,
-            arguments[0] as A,
-            arguments[1] as B,
-            arguments[2] as C,
-            arguments[3] as D,
-            arguments[4] as E
-        )
+        try {
+            return function(
+                interpreter,
+                arguments[0] as A,
+                arguments[1] as B,
+                arguments[2] as C,
+                arguments[3] as D,
+                arguments[4] as E
+            )
+        } catch (e: ClassCastException) {
+            throw RuntimeError(line, "Invalid argument type")
+        }
     }
 
     override fun arity(): Int {

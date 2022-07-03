@@ -14,6 +14,7 @@ Welcome to Oasis's documentation!
    syntax
    Conditionals
    Prototypes
+   Functions
 
 Indices and tables
 ==================

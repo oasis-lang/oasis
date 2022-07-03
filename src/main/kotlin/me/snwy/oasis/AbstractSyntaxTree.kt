@@ -130,7 +130,7 @@ class Func(val operands: List<Token>, var body: StmtList, line: Int, column: Int
     }
 }
 
-class FCallExpr(var func: Expr, var operands: List<Expr>, line: Int, column: Int, var splat: Boolean = false) :
+class FCallExpr(var func: Expr, var operands: ArrayList<Expr>, line: Int, column: Int, var splat: Boolean = false) :
     Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitFcall(this)

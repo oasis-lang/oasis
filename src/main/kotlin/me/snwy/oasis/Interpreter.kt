@@ -69,8 +69,8 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             is Indexer -> {
                 a = eval(assignment.value)
                 when (val indexer = eval((assignment.left as Indexer).expr)) {
-                    is ArrayList<*> -> (indexer as ArrayList<Any?>)[
-                            (eval((assignment.left as Indexer).index) as Double).toInt()
+                    is ArrayList<*> -> (indexer as ArrayList<Any?>) [
+                            (eval((assignment.left as Indexer).index) as Number).toInt()
                     ] = a
                     is OasisPrototype -> {
                         (indexer.get("__setIndex") as OasisCallable).call(
@@ -95,28 +95,28 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 PartialFunc(
                     (environment.get("string".hashCode()) as OasisPrototype)
                         .get(property.indexer.lexeme) as OasisCallable,
-                    arrayListOf(propertyVal) as ArrayList<Any?>
+                    arrayListOf(propertyVal)
                 )
             }
             is ArrayList<*> -> {
                 PartialFunc(
                     (environment.get("list".hashCode()) as OasisPrototype)
                         .get(property.indexer.lexeme) as OasisCallable,
-                    arrayListOf(propertyVal) as ArrayList<Any?>
+                    arrayListOf(propertyVal)
                 )
             }
             is Func -> {
                 PartialFunc(
                     (environment.get("func".hashCode()) as OasisPrototype)
                         .get(property.indexer.lexeme) as OasisCallable,
-                    arrayListOf(propertyVal) as ArrayList<Any?>
+                    arrayListOf<Any?>(propertyVal)
                 )
             }
-            is Double -> {
+            is Number -> {
                 PartialFunc(
                     (environment.get("math".hashCode()) as OasisPrototype)
                         .get(property.indexer.lexeme) as OasisCallable,
-                    arrayListOf(propertyVal) as ArrayList<Any?>
+                    arrayListOf<Any?>(propertyVal)
                 )
             }
             is OasisPrototype -> propertyVal.get(property.indexer.lexeme)
@@ -131,13 +131,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     override fun visitFcall(fcall: FCallExpr): Any? {
         val callee = (eval(fcall.func) ?: throw RuntimeError(fcall.line, "cannot call null function")) as OasisCallable
         val arguments: ArrayList<Any?> =
-            (if (fcall.splat) eval(fcall.operands[0]) else fcall.operands.map { eval(it) }) as ArrayList<Any?>
+            ((if (fcall.splat) eval(fcall.operands[0]) else fcall.operands.map { eval(it) }) as? ArrayList<Any?>) ?: throw RuntimeError(
+                fcall.line,
+                "Non-list used as splat"
+            )
         return callee.call(this, arguments)
     }
 
     private fun isTruthy(thing: Any?): Boolean {
         if (thing == null) return false
-        if (thing == 0.0) return false
+        if (thing == 0.0 || thing == 0) return false
         if (thing == false) return false
         return true
     }
@@ -149,8 +152,8 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             TokenType.PLUS -> {
                 when (left) {
                     is OasisPrototype -> (left.get("__plus") as OasisCallable).call(this, listOf(right))
-                    is Double -> left + right as Double
-                    is Int -> left + right as Int
+                    is Double -> left + (right as Number).toDouble()
+                    is Int -> left + (right as Number).toInt()
                     is String -> left + right.toString()
                     else -> throw RuntimeError(binop.line, "Cannot add")
                 }
@@ -158,24 +161,24 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             TokenType.MINUS -> {
                 when (left) {
                     is OasisPrototype -> (left.get("__sub") as OasisCallable).call(this, listOf(right))
-                    is Double -> left - right as Double
-                    is Int -> left - right as Int
+                    is Double -> left - (right as Number).toDouble()
+                    is Int -> left - (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot subtract")
                 }
             }
             TokenType.STAR -> {
                 when (left) {
                     is OasisPrototype -> (left.get("__mul") as OasisCallable).call(this, listOf(right))
-                    is Double -> left * right as Double
-                    is Int -> left * right as Int
+                    is Double -> left * (right as Number).toDouble()
+                    is Int -> left * (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot multiply")
                 }
             }
             TokenType.SLASH -> {
                 when (left) {
                     is OasisPrototype -> (left.get("__div") as OasisCallable).call(this, listOf(right))
-                    is Double -> left / right as Double
-                    is Int -> left / right as Int
+                    is Double -> left / (right as Number).toDouble()
+                    is Int -> left / (right as Number).toInt()
                     else -> {
                         println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")
                     }
@@ -204,36 +207,35 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             }
             TokenType.GREATER -> {
                 when (left) {
-                    is Double -> left > right as Double
-                    is Int -> left > right as Int
+                    is Double -> left > (right as Number).toDouble()
+                    is Int -> left > (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot greater")
                 }
             }
             TokenType.GREATER_EQUAL -> {
                 when (left) {
-                    is Double -> left >= right as Double
-                    is Int -> left >= right as Int
+                    is Double -> left >= (right as Number).toDouble()
+                    is Int -> left >= (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot greater equal")
                 }
             }
             TokenType.LESS -> {
                 when (left) {
-                    is Double -> left < right as Double
-                    is Int -> left < right as Int
+                    is Double -> left < (right as Number).toDouble()
+                    is Int -> left < (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot less")
                 }
             }
             TokenType.LESS_EQUAL -> {
                 when (left) {
-                    is Double -> left <= right as Double
-                    is Int -> left <= right as Int
+                    is Double -> left <= (right as Number).toDouble()
+                    is Int -> left <= (right as Number).toInt()
                     else -> throw RuntimeError(binop.line, "Cannot less equal")
                 }
             }
             TokenType.MOD -> {
                 when (left) {
-                    is Double -> left % right as Double
-                    is Int -> left % right as Int
+                    is Number -> oasisMod(left.toInt(), (right as Number).toInt())
                     else -> throw RuntimeError(binop.line, "Cannot mod")
                 }
             }
@@ -341,8 +343,8 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitIndexer(indexer: Indexer): Any? {
         return when (val x = eval(indexer.expr)) {
-            is String -> x[(eval(indexer.index) as Double).toInt()]
-            is ArrayList<*> -> x[(eval(indexer.index) as Double).toInt()]
+            is String -> x[(eval(indexer.index) as Number).toInt()]
+            is ArrayList<*> -> x[(eval(indexer.index) as Number).toInt()]
             is OasisPrototype -> (x.get("__index") as OasisCallable).call(this, listOf(eval(indexer.index)))
             else -> throw RuntimeError(indexer.line, "Cannot index")
         }
@@ -355,7 +357,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitNegate(negate: Negate): Any {
-        return -(eval(negate.value) as Double)
+        return when (val x = eval(negate.value)) {
+            is Double -> -x
+            is Int -> -x
+            is Long -> -x
+            else -> (x as? Number)?.toInt() ?: throw RuntimeError(negate.line, "Cannot negate")
+        }
     }
 
     override fun visitNew(ref: New): Any? {
@@ -442,8 +449,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
             }
             is Iterable<*> -> {
                 for (element in iteratorExpr) {
-                    environment.values[(forLoopIterator.varName as Variable).name.lexeme.hashCode()] = element
-                    execute(forLoopIterator.body)
+                    try {
+                        environment.values[(forLoopIterator.varName as Variable).name.lexeme.hashCode()] = element
+                        execute(forLoopIterator.body)
+                    } catch (internalException: InternalException) {
+                        when (internalException.type) {
+                            ExceptionType.BREAK -> break
+                            ExceptionType.CONTINUE -> continue
+                            ExceptionType.ITERATOR_EMPTY -> throw internalException // keep it going, doesn't matter here
+                        }
+                    }
                 }
             }
             else -> throw RuntimeError(forLoopIterator.line, "Cannot iterate")

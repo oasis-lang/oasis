@@ -17,7 +17,7 @@ class PrototypeContext(prototype: Proto, visitor: ContextVisitor) {
     fun get(key: String): Any? = map[key]
 }
 
-object stdMap {
+object StdMap {
     val map = mutableMapOf<String, Any>()
 
     init {
@@ -55,10 +55,10 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
 
     val diagnostics = arrayListOf<Diagnostic>()
 
-    private val _NO_VALUE = Or<HashMap<String, Any>, Unit>(null, Unit)
+    private val NOVALUE = Or<HashMap<String, Any>, Unit>(null, Unit)
 
     init {
-        variables.putAll(stdMap.map)
+        variables.putAll(StdMap.map)
     }
 
     override fun visitLiteral(literal: Literal): Or<HashMap<String, Any>, Unit> {
@@ -113,7 +113,7 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
         return Or(null, Unit)
     }
 
-    override fun visitProperty(property: Property): Or<HashMap<String, Any>, Unit> = _NO_VALUE
+    override fun visitProperty(property: Property): Or<HashMap<String, Any>, Unit> = NOVALUE
 
     override fun visitFunc(func: Func): Or<HashMap<String, Any>, Unit> {
         func.operands.forEach {
@@ -138,16 +138,16 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
                 variables.remove(it.lexeme)
             }
         }
-        return _NO_VALUE
+        return NOVALUE
     }
 
-    override fun visitFcall(fcall: FCallExpr) = _NO_VALUE
+    override fun visitFcall(fcall: FCallExpr) = NOVALUE
 
-    override fun visitBinOp(binop: BinOp) = _NO_VALUE
+    override fun visitBinOp(binop: BinOp) = NOVALUE
 
     override fun visitGroup(group: Group): Or<HashMap<String, Any>, Unit> {
         group.expr.accept(this)
-        return _NO_VALUE
+        return NOVALUE
     }
 
     override fun visitVariable(variable: Variable): Or<HashMap<String, Any>, Unit> {
@@ -161,10 +161,10 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
                 )
             )
         }
-        return _NO_VALUE
+        return NOVALUE
     }
 
-    override fun vistPrecomputed(precomputed: Precomputed) = _NO_VALUE
+    override fun vistPrecomputed(precomputed: Precomputed) = NOVALUE
 
     override fun visitProto(proto: Proto): Or<HashMap<String, Any>, Unit> {
         val map = hashMapOf<String, Any>()
@@ -205,24 +205,24 @@ class ContextVisitor : Expr.Visitor<Or<HashMap<String, Any>, Unit>>, Stmt.Visito
         return Or(map, null)
     }
 
-    override fun visitIndexer(indexer: Indexer) = _NO_VALUE
+    override fun visitIndexer(indexer: Indexer) = NOVALUE
 
-    override fun visitList(list: OasisList) = _NO_VALUE
+    override fun visitList(list: OasisList) = NOVALUE
 
-    override fun visitNegate(negate: Negate) = _NO_VALUE
+    override fun visitNegate(negate: Negate) = NOVALUE
 
-    override fun visitNew(ref: New) = _NO_VALUE
+    override fun visitNew(ref: New) = NOVALUE
 
-    override fun visitNot(not: Not) = _NO_VALUE
+    override fun visitNot(not: Not) = NOVALUE
 
-    override fun visitListComprehension(listComprehension: ListComprehension) = _NO_VALUE
+    override fun visitListComprehension(listComprehension: ListComprehension) = NOVALUE
 
-    override fun visitMapLiteral(mapLiteral: MapLiteral) = _NO_VALUE
+    override fun visitMapLiteral(mapLiteral: MapLiteral) = NOVALUE
 
     override fun visitIfExpression(ifExpression: IfExpression): Or<HashMap<String, Any>, Unit> {
         ifExpression.expr.accept(this)
         ifExpression.elseExpr.accept(this)
-        return _NO_VALUE
+        return NOVALUE
     }
 
     override fun visitLet(let: Let) {

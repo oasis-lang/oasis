@@ -14,6 +14,12 @@ To define a variable, use the ``let`` keyword.
 
     let foo = 1
 
+To make a constant, use the ``const`` keyword.
+
+.. code-block:: oasis
+
+    let const foo = 1
+
 To assign a new value to a defined variable, no keyword is needed.
 
 .. code-block:: oasis
@@ -55,7 +61,7 @@ For example:
 
 .. code-block:: oasis
 
-    // Other languages:
+    // JavaScript:
     foo.bar // property bar of foo
 
     // oasis:
@@ -66,7 +72,7 @@ For example:
 
 .. code-block:: oasis
 
-    // Other languages:
+    // JavaScript:
     foo[12] // element at index 12 of foo
 
     // oasis:
@@ -88,6 +94,11 @@ For most block statements, a marker for the beginning of a block is not necessar
         io:print("woah! 2 is equal to 2!!")
     else
         io:print("woah! 2 is not equal to 2!!")
+    end
+
+    // block passed to a function
+    5:times do
+        io:print("hello") // prints "hello" 5 times
     end
 
 ********
@@ -117,6 +128,12 @@ Functions only exist in the form of `function literals.` These are practically l
         return x * x
     end
 
+    // Function with no parameters
+
+    let fooBar = fn
+        // does something or other
+    end
+
     foo(2) // 4
 
     // You can also pass functions to functions!
@@ -142,9 +159,7 @@ Prototypes also only exist in literal form.
 
     let foo = proto
         x = 2
-        y = fn(n)
-            return this:x * n
-        end
+        y = fn(n) => this:x * n
     end
 
     io:print(foo:x) // 2

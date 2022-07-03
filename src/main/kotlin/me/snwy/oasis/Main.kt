@@ -77,6 +77,10 @@ fun main(args: Array<String>) {
     }
 }
 
+fun oasisMod(a: Int, b: Int): Int {
+    return (a % b + b) % b
+}
+
 fun error(line: Int, reason: String) {
     println("On line $line: $reason")
 }

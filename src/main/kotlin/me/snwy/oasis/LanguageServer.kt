@@ -201,11 +201,11 @@ class OasisTextDocumentService(private val languageServer: OasisLanguageServer) 
             variables.forEach { pair ->
                 if (pair.key.startsWith(attemptedCompletion)) {
                     if (pair.value is PrototypeContext) {
-                        (pair.value as PrototypeContext).map.forEach { pair ->
-                            candidates.add(CompletionItem(pair.key).also {
-                                it.detail = pair.key
-                                it.insertText = pair.key
-                                it.kind = when (pair.value) {
+                        (pair.value as PrototypeContext).map.forEach { protoPair ->
+                            candidates.add(CompletionItem(protoPair.key).also {
+                                it.detail = protoPair.key
+                                it.insertText = protoPair.key
+                                it.kind = when (protoPair.value) {
                                     is Proto -> CompletionItemKind.Struct
                                     is Func -> CompletionItemKind.Function
                                     else -> CompletionItemKind.Variable

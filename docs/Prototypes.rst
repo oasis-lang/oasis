@@ -30,7 +30,7 @@ Prototypes can be inherited from. For example:
 
 .. code-block:: oasis
 
-    let bar = proto > foo
+    let bar = proto : foo
         d = "world!"
     end
 
@@ -132,7 +132,9 @@ Prototypes can have overloaded functions. For example:
 
     io:print(foo + 2) // prints 7
 
-Here's all of the overloadable functions:
+********
+Overloadable Members
+********
 
 **__add, __sub, __mul, __div, __mod, __and, __or**
 
@@ -146,7 +148,7 @@ This function is called when the prototype is serialized. It must return a hashm
 
     let foo = proto
         a = 5
-        __serialize = fn()
+        __serialize = fn
             return {
                 "a" | this:a,
                 "b" | this:a + 2
@@ -220,7 +222,7 @@ It must return a string.
 
     let foo = proto
         a = 5
-        toString = fn()
+        toString = fn
             return "a value is: " + this:a
         end
     end

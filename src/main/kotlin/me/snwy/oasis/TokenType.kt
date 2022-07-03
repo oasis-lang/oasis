@@ -18,7 +18,7 @@ enum class TokenType {
 
     LET, PROTO, FN, FOR, IF, NIL, RETURN, TRUE, FALSE, WHILE, END,
     ELSE, AND, NOT, OR, NEW, IS, IMMUTABLE, TEST, ERROR, IN, BREAK, CONTINUE, OF,
-    REL,
+    REL, BEGIN,
 
     EOF
 }

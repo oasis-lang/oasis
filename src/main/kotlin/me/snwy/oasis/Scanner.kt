@@ -27,7 +27,7 @@ class Scanner(private val source: String) {
         "not" to NOT,
         "clone" to NEW,
         "is" to IS,
-        "immutable" to IMMUTABLE,
+        "const" to IMMUTABLE,
         "test" to TEST,
         "error" to ERROR,
         "break" to BREAK,
@@ -35,6 +35,7 @@ class Scanner(private val source: String) {
         "in" to IN,
         "of" to OF,
         "rel" to REL,
+        "do" to BEGIN,
     )
 
     private fun error(line: Int, column: Int, msg: String) {

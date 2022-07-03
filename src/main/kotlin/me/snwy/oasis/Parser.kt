@@ -24,7 +24,7 @@ class Parser(val tokens: List<Token>) {
         return tokens[current].type == type
     }
 
-    private fun AorAn(word: String): String {
+    private fun aOrAn(word: String): String {
         return if (word.startsWith("a") || word.startsWith("e") || word.startsWith("i") || word.startsWith("o") || word.startsWith(
                 "u"
             )
@@ -43,7 +43,7 @@ class Parser(val tokens: List<Token>) {
                         Locale.getDefault()
                     )
                 }, expected ${
-                    AorAn(
+                    aOrAn(
                         type.name.lowercase(Locale.getDefault())
                     )
                 }"
@@ -56,16 +56,18 @@ class Parser(val tokens: List<Token>) {
         val begin = tokens[current].line
         var column: Int
         eat(FN).also { column = it.column }
-        eat(LEFT_PAREN)
         val operands: ArrayList<Token> = ArrayList()
-        if (peek(IDENTIFIER)) {
-            operands.add(eat(IDENTIFIER))
-            while (!peek(RIGHT_PAREN)) {
-                eat(COMMA)
+        if(peek(LEFT_PAREN)) {
+            eat(LEFT_PAREN)
+            if (peek(IDENTIFIER)) {
                 operands.add(eat(IDENTIFIER))
+                while (!peek(RIGHT_PAREN)) {
+                    eat(COMMA)
+                    operands.add(eat(IDENTIFIER))
+                }
             }
+            eat(RIGHT_PAREN)
         }
-        eat(RIGHT_PAREN)
         if (peek(LAMBDA_ARROW)) {
             eat(LAMBDA_ARROW)
             val body = StmtList(
@@ -89,13 +91,13 @@ class Parser(val tokens: List<Token>) {
         var column: Int
         eat(PROTO).also { column = it.column }
         var base: Expr? = null
-        if (peek(GREATER)) {
-            eat(GREATER)
+        if (peek(COLON)) {
+            eat(COLON)
             base = expression()
         }
         val body: ArrayList<Stmt> = ArrayList()
         while (!peek(END)) {
-            var column: Int
+            var column1: Int
             if (peek(LET))
                 body.add(lets())
             else
@@ -104,12 +106,12 @@ class Parser(val tokens: List<Token>) {
                         AssignmentExpr(
                             Variable(
                                 eat(IDENTIFIER).also
-                                { eat(EQUAL); column = it.column }, begin, column
+                                { eat(EQUAL); column1 = it.column }, begin, column1
                             ),
                             expression(),
-                            begin, column
+                            begin, column1
                         ),
-                        begin, column
+                        begin, column1
                     )
                 )
         }
@@ -188,8 +190,8 @@ class Parser(val tokens: List<Token>) {
             eat(LAMBDA_ARROW)
             val then = expression()
             eat(ELSE)
-            val else_ = expression()
-            result = IfExpression(condition, then, else_, begin, column)
+            val elseExpr = expression()
+            result = IfExpression(condition, then, elseExpr, begin, column)
         } else {
             error(tokens[current].line, tokens[current].column, "Invalid expression")
         }
@@ -306,6 +308,23 @@ class Parser(val tokens: List<Token>) {
                 }
                 else -> {
                     error(tokens[current].line, "This should not happen. Please report this bug.")
+                }
+            }
+        }
+
+        if(peek(BEGIN)) {
+            eat(BEGIN)
+            val stmts = arrayListOf<Stmt>()
+            while (!peek(END)) {
+                stmts.add(statement())
+            }
+            eat(END)
+            when(result) {
+                is FCallExpr -> {
+                    result.operands.add(Func(listOf(), StmtList(stmts, result.line, result.column), result.line, result.column))
+                }
+                else -> {
+                    result = FCallExpr(result, arrayListOf(Func(listOf(), StmtList(stmts, result.line, result.column), result.line, result.column)), result.line, result.column)
                 }
             }
         }
@@ -511,7 +530,7 @@ class Parser(val tokens: List<Token>) {
         eat(IS).also { column = it.column }
         val expr = expression()
         val cases = ArrayList<IfStmt>()
-        var else_: StmtList? = null
+        var elseExpr: StmtList? = null
         while (!peek(END) && !peek(ELSE)) {
             val caseExpr = expression()
             val thisColumn = caseExpr.column
@@ -537,17 +556,17 @@ class Parser(val tokens: List<Token>) {
             )
         }
         if (peek(ELSE)) {
-            var thisColumn = 0
+            var thisColumn: Int
             eat(ELSE).also { thisColumn = it.column }
             val caseBody = ArrayList<Stmt>()
             while (!peek(END)) {
                 caseBody.add(statement())
             }
             eat(END)
-            else_ = StmtList(caseBody, begin, thisColumn)
+            elseExpr = StmtList(caseBody, begin, thisColumn)
         }
         eat(END)
-        return Is(expr, StmtList(cases, begin, column), else_, begin, column)
+        return Is(expr, StmtList(cases, begin, column), elseExpr, begin, column)
     }
 
     private fun whiles(): WhileStmt {

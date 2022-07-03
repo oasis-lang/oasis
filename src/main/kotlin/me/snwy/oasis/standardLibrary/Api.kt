@@ -5,9 +5,9 @@ import me.snwy.oasis.*
 import java.net.InetSocketAddress
 
 var api = Module("api") { it, _ ->
-    val api = KotlinFunction1<OasisPrototype, Double> { interpreter, it ->
-        val api = OasisPrototype(base, -1, interpreter).apply {
-            set("port", it.toInt())
+    val api = KotlinFunction1<OasisPrototype, Double> { interpreter, apiIt ->
+        val api = OasisPrototype(base, line, interpreter).apply {
+            set("port", apiIt.toInt())
             set("__server", HttpServer.create(InetSocketAddress(get("port") as Int), 0))
             set("get", KotlinFunction2<Unit, String, OasisCallable> { interpreter, x, y ->
                 (get("__server") as HttpServer).createContext(x) {
@@ -20,9 +20,9 @@ var api = Module("api") { it, _ ->
                                     String(it.requestBody.readBytes())
                                 )
                             )
-                        } as ArrayList<Any?>
-                        val responseCode = (response[0] as Double).toInt()
-                        val responseText = response[1] as String
+                        } as? ArrayList<*> ?: throw OasisException("API: get: response is not an array")
+                        val responseCode = (response[0] as? Number)?.toInt() ?: throw OasisException("API: get: first response item is not a status code")
+                        val responseText = response[1] as? String ?: throw OasisException("API: get: second response item is not a response body")
                         it.sendResponseHeaders(responseCode, responseText.toByteArray().size.toLong())
                         it.responseBody.write(responseText.toByteArray())
                         it.responseBody.flush()
@@ -43,9 +43,9 @@ var api = Module("api") { it, _ ->
                                     String(it.requestBody.readBytes())
                                 )
                             )
-                        } as ArrayList<Any?>
-                        val responseCode = (response[0] as Double).toInt()
-                        val responseText = response[1] as String
+                        } as? ArrayList<*> ?: throw OasisException("API: get: response is not an array")
+                        val responseCode = (response[0] as? Number)?.toInt() ?: throw OasisException("API: get: first response item is not a status code")
+                        val responseText = response[1] as? String ?: throw OasisException("API: get: second response item is not a response body")
                         it.sendResponseHeaders(responseCode, responseText.toByteArray().size.toLong())
                         it.responseBody.write(responseText.toByteArray())
                         it.responseBody.flush()
