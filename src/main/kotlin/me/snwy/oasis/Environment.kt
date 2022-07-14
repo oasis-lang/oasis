@@ -1,7 +1,10 @@
 package me.snwy.oasis
 
+import java.util.*
+
 class Environment(private val enclosing: Environment? = null) {
-    var values: HashMap<Int, Any?> = HashMap()
+    @JvmField
+    var values: MutableMap<Int, Any?> = HashMap()
 
     fun define(name: Int, value: Any?) {
         if (values.containsKey(name)) {
@@ -39,7 +42,7 @@ class Environment(private val enclosing: Environment? = null) {
             enclosing.assign(name, value)
             return
         }
-        throw RuntimeError(line, "Undefined variable '${name}'")
+        throw RuntimeError(line, "Undefined variable '${Optimizer.nameMap[name]}'")
     }
 
     private fun assign(name: String, value: Any?) {

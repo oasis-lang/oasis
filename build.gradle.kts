@@ -20,6 +20,8 @@ dependencies {
     implementation("org.knowm.xchart:xchart:3.8.1")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.14.0")
     implementation("com.fazecast:jSerialComm:2.9.1")
+    implementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    testImplementation(kotlin("test"))
 }
 
 tasks.withType<KotlinCompile> {
@@ -28,6 +30,10 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("oasis.MainKt")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.jar {

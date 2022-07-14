@@ -1,18 +1,15 @@
 package me.snwy.oasis
 
 import me.snwy.oasis.standardLibrary.base
+import java.util.*
 
-class OasisPrototype(var inherit: OasisPrototype? = base, val line: Int, var interpreter: Interpreter? = null) :
+class OasisPrototype(@JvmField var inherit: OasisPrototype? = base, @JvmField val line: Int, @JvmField var interpreter: Interpreter? = null) :
     Cloneable {
-    var body: HashMap<String, Any?> = HashMap()
+    @JvmField
+    var body: MutableMap<String, Any?> = TreeMap()
 
     fun get(name: String): Any? {
-        if (body.containsKey(name)) {
-            return body[name]
-        } else if (inherit != null && inherit!!.body.containsKey(name)) {
-            return inherit!!.body[name]
-        }
-        return null
+        return body[name] ?: (inherit?.get(name))
     }
 
     fun set(name: String, value: Any?) {

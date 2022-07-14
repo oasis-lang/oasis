@@ -10,7 +10,7 @@ import kotlin.system.exitProcess
 
 var repl = false
 fun main(args: Array<String>) {
-    val env = Creator.create("")
+    val env = OasisEnvironment()
     val program = args.find {
         Files.exists(Path.of(it))
     }
@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             error(e.line, e.parseMessage)
             println(
                 "| ${
-                    Files.readString(Path.of(program)).split('\n')[env.parser.tokens[env.parser.current].line - 1]
+                    Files.readString(Path.of(program)).split('\n')[env.parser?.tokens?.get(env.parser!!.current)?.line!! - 1]
                 }"
             )
             exitProcess(1)
@@ -68,7 +68,10 @@ fun main(args: Array<String>) {
     } else while (true) {
         repl = true
         try {
-            console.readLine("oasis -> ")?.let { env.eval(it); env.run() }
+            console.readLine("oasis -> ")?.let {
+                env.eval(it)
+                env.run()
+            }
         } catch (e: RuntimeError) {
             error(e.line, e.s)
         } catch (e: ParseException) {

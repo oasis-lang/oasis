@@ -119,7 +119,7 @@ class Parser(val tokens: List<Token>) {
         return Proto(base, StmtList(body, begin, column), begin, column)
     }
 
-    private fun expression(): Expr {
+    fun expression(): Expr {
         val begin = tokens[current].line
         var result: Expr = Literal(null, begin, tokens[current].column)
         if (peek(IDENTIFIER)) {
@@ -152,7 +152,20 @@ class Parser(val tokens: List<Token>) {
         } else if (peek(LEFT_PAREN)) {
             var column: Int
             eat(LEFT_PAREN).also { column = it.column }
-            result = Group(expression(), begin, column)
+            val firstExpr = expression()
+            val exprList = ArrayList<Expr>()
+            result = if (peek(COMMA)) {
+                exprList.add(firstExpr)
+                while(peek(COMMA)) {
+                    eat(COMMA)
+                    if (!peek(RIGHT_PAREN)) {
+                        exprList.add(expression())
+                    }
+                }
+                Tuple(exprList, begin, column)
+            } else {
+                firstExpr
+            }
             eat(RIGHT_PAREN)
         } else if (peek(NIL)) {
             result = Literal(null, begin, eat(NIL).column)
@@ -312,7 +325,7 @@ class Parser(val tokens: List<Token>) {
             }
         }
 
-        if(peek(BEGIN)) {
+        if(peek(BEGIN) && tokens[current].line == begin) {
             eat(BEGIN)
             val stmts = arrayListOf<Stmt>()
             while (!peek(END)) {
@@ -414,6 +427,14 @@ class Parser(val tokens: List<Token>) {
             return ContinueStmt(begin, column)
         } else if (peek(REL)) {
             rel()
+        } else if (peek(BEGIN)) {
+            eat(BEGIN).also { column = it.column }
+            val stmts = arrayListOf<Stmt>()
+            while (!peek(END)) {
+                stmts.add(statement())
+            }
+            eat(END)
+            DoBlock(StmtList(stmts, begin, column), begin, column)
         } else {
             ExprStmt(expression().also { column = it.column }, begin, column)
         }
@@ -591,10 +612,15 @@ class Parser(val tokens: List<Token>) {
             eat(IMMUTABLE)
             immutable = true
         }
-        val name: Token = eat(IDENTIFIER)
+        val targets = ArrayList<Token>()
+        targets.add(eat(IDENTIFIER))
+        while (peek(COMMA)) {
+            eat(COMMA)
+            targets.add(eat(IDENTIFIER))
+        }
         eat(EQUAL)
         val value: Expr = expression()
-        return Let(name, value, begin, column, immutable)
+        return Let(targets, value, begin, column, immutable)
     }
 
     fun parse(): Stmt {

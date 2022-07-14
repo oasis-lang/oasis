@@ -1,36 +1,38 @@
 package me.snwy.oasis
 
-object Creator {
-    fun create(code: String): OasisEnvironment {
-        val env = OasisEnvironment(Interpreter(), null)
-        env.eval = {
-            val scanner = Scanner(it)
-            env.scanner = scanner
-            val parser = Parser(scanner.scanTokens())
-            env.parser = parser
-            val program = Optimizer().optimize(parser.parse())
-            env.ast = program
-        }
-        env.get = {
-            env.interpreter.environment.get(it.hashCode())
-        }
-        env.define = { x, y ->
-            env.interpreter.environment.define(x.hashCode(), y)
-        }
-        env.eval(code)
-        return env
+class OasisEnvironment(var interpreter: Interpreter = Interpreter(), var ast: StmtList? = null) {
+    var parser: Parser? = null
+    var scanner: Scanner? = null
+
+    fun eval(code: String) {
+        val scanner = Scanner(code)
+        this.scanner = scanner
+        val tokens = scanner.scanTokens()
+        val parser = Parser(tokens)
+        this.parser = parser
+        val ast = parser.parse()
+        val program = Optimizer().optimize(ast)
+        this.ast = program as StmtList
     }
-}
-
-class OasisEnvironment(var interpreter: Interpreter, var ast: Stmt?) {
-    lateinit var eval: (String) -> Unit
-    lateinit var define: (String, Any) -> Unit
-    lateinit var get: (String) -> Any?
-
-    lateinit var parser: Parser
-    lateinit var scanner: Scanner
-
+    fun doExpr(code: String): Any? {
+        val scanner = Scanner(code)
+        this.scanner = scanner
+        val tokens = scanner.scanTokens()
+        val parser = Parser(tokens)
+        this.parser = parser
+        val ast = parser.expression()
+        val program = Optimizer().optimize(ast)
+        return interpreter.eval(program)
+    }
+    fun define(name: String, value: Any) {
+        interpreter.environment.define(name.hashCode(), value)
+    }
+    fun get(name: String): Any? {
+        return interpreter.environment.get(name.hashCode())
+    }
     fun run() {
-        interpreter.execute(ast!!)
+        ast!!.stmts.forEach {
+            interpreter.execute(it)
+        }
     }
 }

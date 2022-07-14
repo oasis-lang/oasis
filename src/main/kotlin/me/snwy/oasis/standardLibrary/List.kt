@@ -63,7 +63,7 @@ val list = Module("list") { it, interpreter ->
             y.call(interpreter, listOf(z))
         }
     })
-    list.set("reduce", KotlinFunction3<Any?, Collection<Any?>, OasisCallable, OasisCallable> { interpreter, x, y, z ->
+    list.set("reduce", KotlinFunction2<Any?, Collection<Any?>, OasisCallable> { interpreter, x, y ->
         x.reduce { a, b ->
             y.call(interpreter, listOf(a, b))
         }

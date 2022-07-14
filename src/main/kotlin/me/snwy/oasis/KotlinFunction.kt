@@ -1,6 +1,6 @@
 package me.snwy.oasis
 
-class KotlinFunction0<T>(val function: (interpreter: Interpreter) -> T) : OasisCallable {
+class KotlinFunction0<T>(@JvmField val function: (interpreter: Interpreter) -> T) : OasisCallable {
     constructor(function: () -> T) : this({ interpreter -> function() })
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
@@ -17,7 +17,7 @@ class KotlinFunction0<T>(val function: (interpreter: Interpreter) -> T) : OasisC
     }
 }
 
-class KotlinFunction1<T, A>(val function: (interpreter: Interpreter, A) -> T) : OasisCallable {
+class KotlinFunction1<T, A>(@JvmField val function: (interpreter: Interpreter, A) -> T) : OasisCallable {
     constructor(function: (A) -> T) : this({ interpreter, x -> function(x) })
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
@@ -38,7 +38,7 @@ class KotlinFunction1<T, A>(val function: (interpreter: Interpreter, A) -> T) : 
     }
 }
 
-class KotlinFunction2<T, A, B>(val function: (interpreter: Interpreter, a: A, b: B) -> T) : OasisCallable {
+class KotlinFunction2<T, A, B>(@JvmField val function: (interpreter: Interpreter, a: A, b: B) -> T) : OasisCallable {
     constructor(function: (A, B) -> T) : this({ interpreter, x, y -> function(x, y) })
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
@@ -59,7 +59,7 @@ class KotlinFunction2<T, A, B>(val function: (interpreter: Interpreter, a: A, b:
     }
 }
 
-class KotlinFunction3<T, A, B, C>(val function: (interpreter: Interpreter, a: A, b: B, c: C) -> T) : OasisCallable {
+class KotlinFunction3<T, A, B, C>(@JvmField val function: (interpreter: Interpreter, a: A, b: B, c: C) -> T) : OasisCallable {
     constructor(function: (A, B, C) -> T) : this({ interpreter, x, y, z -> function(x, y, z) })
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
@@ -80,7 +80,7 @@ class KotlinFunction3<T, A, B, C>(val function: (interpreter: Interpreter, a: A,
     }
 }
 
-class KotlinFunction4<T, A, B, C, D>(val function: (interpreter: Interpreter, a: A, b: B, c: C, D) -> T) :
+class KotlinFunction4<T, A, B, C, D>(@JvmField val function: (interpreter: Interpreter, a: A, b: B, c: C, D) -> T) :
     OasisCallable {
     constructor(function: (A, B, C, D) -> T) : this({ interpreter, w, x, y, z -> function(w, x, y, z) })
 
@@ -102,7 +102,7 @@ class KotlinFunction4<T, A, B, C, D>(val function: (interpreter: Interpreter, a:
     }
 }
 
-class KotlinFunction5<T, A, B, C, D, E>(val function: (interpreter: Interpreter, a: A, b: B, c: C, d: D, e: E) -> T) :
+class KotlinFunction5<T, A, B, C, D, E>(@JvmField val function: (interpreter: Interpreter, a: A, b: B, c: C, d: D, e: E) -> T) :
     OasisCallable {
     constructor(function: (A, B, C, D, E) -> T) : this({ interpreter, v, w, x, y, z -> function(v, w, x, y, z) })
 

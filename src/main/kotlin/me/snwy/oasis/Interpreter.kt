@@ -7,17 +7,16 @@ import me.snwy.oasis.standardLibrary.createHashMap
 var line: Int = 0
 
 class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
-
-    private var globals = Environment()
-    var environment: Environment = globals
-
-    private var retInstance = Return(null)
+    @JvmField
+    var environment: Environment = Environment()
+    @JvmField
+    var retInstance = Return(null)
 
     init {
         StandardLibrary.generateLib(environment, this)
     }
 
-    private inline fun eval(expr: Expr): Any? {
+    inline fun eval(expr: Expr): Any? {
         return expr.accept(this)
     }
 
@@ -26,15 +25,17 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         stmt.accept(this)
     }
 
-    private fun execute(stmtList: StmtList) {
-        executeBlock(stmtList, environment)
+    private inline fun execute(stmtList: StmtList) {
+        executeBlock(stmtList, Environment(environment))
     }
 
-    fun executeBlock(stmtList: StmtList, env: Environment) {
+    inline fun executeBlock(stmtList: StmtList, env: Environment) {
         val previous: Environment = environment
         try {
             environment = env
-            stmtList.accept(this)
+            stmtList.stmts.forEach {
+                execute(it)
+            }
         } finally {
             environment = previous
         }
@@ -79,6 +80,18 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                         )
                     }
                     else -> throw RuntimeError(assignment.line, "Cannot index")
+                }
+            }
+            is Tuple -> {
+                if(!(assignment.left as Tuple).exprs.all { it is Variable || it is Precomputed }) {
+                    throw RuntimeError(assignment.line, "Cannot assign to tuple")
+                }
+                val right = eval(assignment.value)
+                if (right !is Iterable<*>) {
+                    throw RuntimeError(assignment.line, "Right side of tuple assignment must be an iterable")
+                }
+                for((i, expr) in (assignment.left as Tuple).exprs.withIndex()) {
+                    environment.assign((expr as? Precomputed)?.hash ?: (expr as Variable).name.lexeme.hashCode(), right.elementAt(i))
                 }
             }
             else -> {
@@ -130,11 +143,13 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
 
     override fun visitFcall(fcall: FCallExpr): Any? {
         val callee = (eval(fcall.func) ?: throw RuntimeError(fcall.line, "cannot call null function")) as OasisCallable
-        val arguments: ArrayList<Any?> =
-            ((if (fcall.splat) eval(fcall.operands[0]) else fcall.operands.map { eval(it) }) as? ArrayList<Any?>) ?: throw RuntimeError(
-                fcall.line,
-                "Non-list used as splat"
-            )
+        val arguments = ArrayList<Any?>()
+        if (fcall.splat) {
+            val splat = eval(fcall.operands[0]) as Iterable<*>
+            arguments.addAll(splat)
+        } else {
+            arguments.addAll(fcall.operands.map { eval(it) })
+        }
         return callee.call(this, arguments)
     }
 
@@ -180,7 +195,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                     is Double -> left / (right as Number).toDouble()
                     is Int -> left / (right as Number).toInt()
                     else -> {
-                        println("$left / $right"); throw RuntimeError(binop.line, "Cannot divide")
+                        throw RuntimeError(binop.line, "Cannot divide")
                     }
                 }
             }
@@ -274,35 +289,38 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         val protoType =
             OasisPrototype((if (proto.base != null) eval(proto.base!!) else base) as OasisPrototype?, proto.line, this)
         proto.body.stmts.map {
-            if (it is Let)
-                protoType.set(it.left.lexeme, eval(it.value))
-            else
+            if (it is Let) {
+                if (it.left.size > 1) throw RuntimeError(it.line, "Multiple let definitions not allowed in prototype")
+                protoType.set(it.left[0].lexeme, eval(it.value))
+            } else
                 protoType.set(
-                    ((
-                            (it as ExprStmt)
-                                .expr as AssignmentExpr)
-                        .left as Variable)
-                        .name
-                        .lexeme,
-                    eval(
-                        (it.expr as AssignmentExpr)
-                            .value
-                    )
+                    ((((it as ExprStmt).expr as AssignmentExpr).left as? Variable) ?: throw RuntimeError(it.line, "Invalid prototype definition")).name.lexeme,
+                    eval((it.expr as AssignmentExpr).value)
                 )
         }
         return protoType
     }
 
     override fun visitLet(let: Let) {
-        environment.define((let.left.lexeme).hashCode(), eval(let.value))
+        if (let.left.size > 1) {
+            val right = eval(let.value)
+            if (right !is Iterable<*>) {
+                throw RuntimeError(let.line, "Right side of multiple let must be iterable")
+            }
+            for (i in 0 until  let.left.size) {
+                environment.define(let.left[i].lexeme.hashCode(), right.elementAt(i))
+            }
+        } else {
+            environment.define((let.left[0].lexeme).hashCode(), eval(let.value))
+        }
     }
 
     override fun visitIfStmt(ifstmt: IfStmt): Boolean {
         return if (isTruthy(eval(ifstmt.expr))) {
-            execute(ifstmt.stmtlist)
+            ifstmt.stmtlist.accept(this)
             true
         } else {
-            ifstmt.elseBody?.let { execute(it) }
+            ifstmt.elseBody?.accept(this)
             false
         }
     }
@@ -310,7 +328,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     override fun visitWhileStmt(whilestmt: WhileStmt) {
         while (isTruthy(eval(whilestmt.expr))) {
             try {
-                execute(whilestmt.body)
+                whilestmt.body.accept(this)
             } catch (internalException: InternalException) {
                 when (internalException.type) {
                     ExceptionType.BREAK -> break
@@ -322,9 +340,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
     }
 
     override fun visitStmtList(stmtlist: StmtList) {
-        stmtlist.stmts.map {
-            execute(it)
-        }
+        execute(stmtlist)
     }
 
     override fun visitReturnStmt(retstmt: RetStmt) {
@@ -383,7 +399,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 return
         }
         is_.else_?.let {
-            execute(it)
+            it.accept(this)
         }
     }
 
@@ -416,7 +432,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         forLoopTriad.init.accept(this)
         while (isTruthy(eval(forLoopTriad.cond))) {
             try {
-                execute(forLoopTriad.body)
+                forLoopTriad.body.accept(this)
                 forLoopTriad.step.accept(this)
             } catch (internalException: InternalException) {
                 when (internalException.type) {
@@ -451,7 +467,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
                 for (element in iteratorExpr) {
                     try {
                         environment.values[(forLoopIterator.varName as Variable).name.lexeme.hashCode()] = element
-                        execute(forLoopIterator.body)
+                        forLoopIterator.body.accept(this)
                     } catch (internalException: InternalException) {
                         when (internalException.type) {
                             ExceptionType.BREAK -> break
@@ -525,7 +541,15 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Any?> {
         }
     }
 
+    override fun visitTuple(tuple: Tuple): Any {
+        return OasisTuple(tuple.exprs.size, ArrayList(tuple.exprs.map { eval(it) }))
+    }
+
     override fun visitRelStmt(relstmt: RelStmt) {
         environment.define(relstmt.name.lexeme.hashCode(), RelativeExpression(relstmt.expr))
+    }
+
+    override fun visitDoBlock(doblock: DoBlock) {
+        doblock.body.accept(this)
     }
 }

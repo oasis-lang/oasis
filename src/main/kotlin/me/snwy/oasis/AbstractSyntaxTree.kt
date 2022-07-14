@@ -20,13 +20,17 @@ abstract class Expr(var line: Int, var column: Int) {
         fun visitListComprehension(listComprehension: ListComprehension): T
         fun visitMapLiteral(mapLiteral: MapLiteral): T
         fun visitIfExpression(ifExpression: IfExpression): T
+        fun visitTuple(tuple: Tuple): T
     }
 
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
 
-class Precomputed(val hash: Int, line: Int, column: Int) : Expr(line, column) {
+class Precomputed(@JvmField val hash: Int, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T = visitor.vistPrecomputed(this)
+    override fun toString(): String {
+        return "Precomputed($hash)"
+    }
 }
 
 abstract class Stmt(var line: Int, var column: Int) {
@@ -44,12 +48,13 @@ abstract class Stmt(var line: Int, var column: Int) {
         fun visitBreakStmt(break_: BreakStmt): T
         fun visitContinueStmt(continue_: ContinueStmt): T
         fun visitRelStmt(relstmt: RelStmt): T
+        fun visitDoBlock(doblock: DoBlock): T
     }
 
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
 
-class ExprStmt(var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
+class ExprStmt(@JvmField var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitExprStmt(this)
     }
@@ -59,7 +64,7 @@ class ExprStmt(var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
     }
 }
 
-class BinOp(var left: Expr, val operator: Token, var right: Expr, line: Int, column: Int) : Expr(line, column) {
+class BinOp(@JvmField var left: Expr, @JvmField val operator: Token, @JvmField var right: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitBinOp(this)
     }
@@ -69,7 +74,7 @@ class BinOp(var left: Expr, val operator: Token, var right: Expr, line: Int, col
     }
 }
 
-class Literal(val value: Any?, line: Int, column: Int) : Expr(line, column) {
+class Literal(@JvmField val value: Any?, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitLiteral(this)
     }
@@ -79,7 +84,7 @@ class Literal(val value: Any?, line: Int, column: Int) : Expr(line, column) {
     }
 }
 
-class AssignmentExpr(var left: Expr, var value: Expr, line: Int, column: Int) : Expr(line, column) {
+class AssignmentExpr(@JvmField var left: Expr, @JvmField var value: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitAssignment(this)
     }
@@ -89,18 +94,18 @@ class AssignmentExpr(var left: Expr, var value: Expr, line: Int, column: Int) : 
     }
 }
 
-class Let(val left: Token, var value: Expr, line: Int, column: Int, val immutable: Boolean = false) :
+class Let(@JvmField val left: ArrayList<Token>, @JvmField var value: Expr, line: Int, column: Int, @JvmField val immutable: Boolean = false) :
     Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitLet(this)
     }
 
     override fun toString(): String {
-        return "Let(${left.lexeme} = $value) at $line"
+        return "Let(${left.joinToString(", ") { it.lexeme }} = $value) at $line"
     }
 }
 
-class StmtList(var stmts: List<Stmt>, line: Int, column: Int) : Stmt(line, column) {
+class StmtList(@JvmField var stmts: List<Stmt>, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitStmtList(this)
     }
@@ -110,7 +115,7 @@ class StmtList(var stmts: List<Stmt>, line: Int, column: Int) : Stmt(line, colum
     }
 }
 
-class Property(var obj: Expr, val indexer: Token, line: Int, column: Int) : Expr(line, column) {
+class Property(@JvmField var obj: Expr, @JvmField val indexer: Token, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitProperty(this)
     }
@@ -120,7 +125,7 @@ class Property(var obj: Expr, val indexer: Token, line: Int, column: Int) : Expr
     }
 }
 
-class Func(val operands: List<Token>, var body: StmtList, line: Int, column: Int) : Expr(line, column) {
+class Func(@JvmField val operands: List<Token>, @JvmField var body: StmtList, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitFunc(this)
     }
@@ -130,7 +135,7 @@ class Func(val operands: List<Token>, var body: StmtList, line: Int, column: Int
     }
 }
 
-class FCallExpr(var func: Expr, var operands: ArrayList<Expr>, line: Int, column: Int, var splat: Boolean = false) :
+class FCallExpr(@JvmField var func: Expr, @JvmField var operands: ArrayList<Expr>, line: Int, column: Int, @JvmField var splat: Boolean = false) :
     Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitFcall(this)
@@ -141,7 +146,7 @@ class FCallExpr(var func: Expr, var operands: ArrayList<Expr>, line: Int, column
     }
 }
 
-class Group(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
+class Group(@JvmField var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitGroup(this)
     }
@@ -151,20 +156,20 @@ class Group(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     }
 }
 
-class IfStmt(var expr: Expr, var stmtlist: StmtList, var elseBody: StmtList?, line: Int, column: Int) :
+class IfStmt(@JvmField var expr: Expr, @JvmField var stmtlist: StmtList, @JvmField var elseBody: StmtList?, line: Int, column: Int) :
     Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIfStmt(this)
     }
 }
 
-class WhileStmt(var expr: Expr, var body: StmtList, line: Int, column: Int) : Stmt(line, column) {
+class WhileStmt(@JvmField var expr: Expr, @JvmField var body: StmtList, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitWhileStmt(this)
     }
 }
 
-class Variable(val name: Token, line: Int, column: Int) : Expr(line, column) {
+class Variable(@JvmField val name: Token, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitVariable(this)
     }
@@ -174,7 +179,7 @@ class Variable(val name: Token, line: Int, column: Int) : Expr(line, column) {
     }
 }
 
-class Proto(var base: Expr?, val body: StmtList, line: Int, column: Int) : Expr(line, column) {
+class Proto(@JvmField var base: Expr?, @JvmField val body: StmtList, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitProto(this)
     }
@@ -184,7 +189,7 @@ class Proto(var base: Expr?, val body: StmtList, line: Int, column: Int) : Expr(
     }
 }
 
-class RetStmt(var expr: Expr?, line: Int, column: Int) : Stmt(line, column) {
+class RetStmt(@JvmField var expr: Expr?, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitReturnStmt(this)
     }
@@ -194,7 +199,7 @@ class RetStmt(var expr: Expr?, line: Int, column: Int) : Stmt(line, column) {
     }
 }
 
-class Indexer(var expr: Expr, var index: Expr, line: Int, column: Int) : Expr(line, column) {
+class Indexer(@JvmField var expr: Expr, @JvmField var index: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIndexer(this)
     }
@@ -204,19 +209,19 @@ class Indexer(var expr: Expr, var index: Expr, line: Int, column: Int) : Expr(li
     }
 }
 
-class OasisList(var exprs: ArrayList<Expr>, line: Int, column: Int) : Expr(line, column) {
+class OasisList(@JvmField var exprs: ArrayList<Expr>, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitList(this)
     }
 }
 
-class Negate(var value: Expr, line: Int, column: Int) : Expr(line, column) {
+class Negate(@JvmField var value: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNegate(this)
     }
 }
 
-class New(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
+class New(@JvmField var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNew(this)
     }
@@ -226,7 +231,7 @@ class New(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     }
 }
 
-class Not(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
+class Not(@JvmField var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitNot(this)
     }
@@ -236,46 +241,52 @@ class Not(var expr: Expr, line: Int, column: Int) : Expr(line, column) {
     }
 }
 
-class MapLiteral(var exprs: ArrayList<Pair<Expr, Expr>>, line: Int, column: Int) : Expr(line, column) {
+class MapLiteral(@JvmField var exprs: ArrayList<Pair<Expr, Expr>>, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitMapLiteral(this)
     }
 }
 
-class ListComprehension(var expr: Expr, var inVal: Expr, line: Int, column: Int) : Expr(line, column) {
+class ListComprehension(@JvmField var expr: Expr, @JvmField var inVal: Expr, line: Int, column: Int) : Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitListComprehension(this)
     }
 }
 
-class IfExpression(var expr: Expr, var thenExpr: Expr, var elseExpr: Expr, line: Int, column: Int) :
+class IfExpression(@JvmField var expr: Expr, @JvmField var thenExpr: Expr, @JvmField var elseExpr: Expr, line: Int, column: Int) :
     Expr(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIfExpression(this)
     }
 }
 
-class Is(var expr: Expr, val cases: StmtList, val else_: StmtList?, line: Int, column: Int) : Stmt(line, column) {
+class Tuple(@JvmField var exprs: ArrayList<Expr>, line: Int, column: Int) : Expr(line, column) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitTuple(this)
+    }
+}
+
+class Is(@JvmField var expr: Expr, @JvmField val cases: StmtList, @JvmField val else_: StmtList?, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitIs(this)
     }
 }
 
-class Test(var block: StmtList, var errorBlock: StmtList, var errorVar: Token, line: Int, column: Int) :
+class Test(@JvmField var block: StmtList, @JvmField var errorBlock: StmtList, @JvmField var errorVar: Token, line: Int, column: Int) :
     Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitTest(this)
     }
 }
 
-class ForLoopTriad(var init: Stmt, var cond: Expr, var step: Stmt, var body: StmtList, line: Int, column: Int) :
+class ForLoopTriad(@JvmField var init: Stmt, @JvmField var cond: Expr, @JvmField var step: Stmt, @JvmField var body: StmtList, line: Int, column: Int) :
     Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitForLoopTriad(this)
     }
 }
 
-class ForLoopIterator(var varName: Expr, var iterable: Expr, var body: StmtList, line: Int, column: Int) :
+class ForLoopIterator(@JvmField var varName: Expr, @JvmField var iterable: Expr, @JvmField var body: StmtList, line: Int, column: Int) :
     Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitForLoopIterator(this)
@@ -294,8 +305,14 @@ class ContinueStmt(line: Int, column: Int) : Stmt(line, column) {
     }
 }
 
-class RelStmt(var name: Token, var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
+class RelStmt(@JvmField var name: Token, @JvmField var expr: Expr, line: Int, column: Int) : Stmt(line, column) {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitRelStmt(this)
+    }
+}
+
+class DoBlock(@JvmField var body: StmtList, line: Int, column: Int) : Stmt(line, column) {
+    override fun <T> accept(visitor: Visitor<T>): T {
+        return visitor.visitDoBlock(this)
     }
 }

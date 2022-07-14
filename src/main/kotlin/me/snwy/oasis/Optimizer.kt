@@ -11,6 +11,10 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         return stmt.accept(this)
     }
 
+    fun optimize(expr: Expr): Expr {
+        return expr.accept(this)
+    }
+
     override fun visitLiteral(literal: Literal): Expr {
         return when(literal.value) {
             is Number -> {
@@ -367,7 +371,9 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
     override fun visitLet(let: Let): Stmt {
         let.value = let.value.accept(this)
         if (let.immutable) {
-            immutables[let.left.lexeme.hashCode()] = let.value.accept(this)
+            let.left.forEach {
+                immutables[it.lexeme.hashCode()] = let.value.accept(this)
+            }
         }
         return let
     }
@@ -465,9 +471,21 @@ class Optimizer : Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         return ifExpression
     }
 
+    override fun visitTuple(tuple: Tuple): Expr {
+        tuple.exprs = tuple.exprs.map {
+            it.accept(this)
+        } as ArrayList<Expr>
+        return tuple
+    }
+
     override fun visitRelStmt(relstmt: RelStmt): Stmt {
         relstmt.expr = relstmt.expr.accept(this)
         return relstmt
+    }
+
+    override fun visitDoBlock(doblock: DoBlock): Stmt {
+        doblock.body = doblock.body.accept(this) as StmtList
+        return doblock
     }
 
 }

@@ -81,7 +81,7 @@ class PythonTranspiler : Expr.Visitor<String>, Stmt.Visitor<String> {
         inProto = true
         var proto_s = "type('proto_${proto.hashCode()}', (${proto.base?.accept(this) ?: "object"},), {"
         proto.body.stmts.forEach {
-            proto_s += "\"${(it as Let).left.lexeme}\": ${it.value.accept(this)}, "
+            proto_s += "\"${(it as Let).left[0].lexeme}\": ${it.value.accept(this)}, "
         }
         proto_s += "})"
         inProto = false
@@ -111,7 +111,7 @@ class PythonTranspiler : Expr.Visitor<String>, Stmt.Visitor<String> {
     override fun visitLet(let: Let): String {
         if (let.immutable)
             println("Warning: Immutable values aren't supported in Python translation")
-        return "${let.left.lexeme} = ${let.value.accept(this)}"
+        return "${let.left[0].lexeme} = ${let.value.accept(this)}"
     }
 
     override fun visitIfStmt(ifstmt: IfStmt): String {
@@ -187,7 +187,15 @@ class PythonTranspiler : Expr.Visitor<String>, Stmt.Visitor<String> {
         TODO("Not yet implemented")
     }
 
+    override fun visitTuple(tuple: Tuple): String {
+        TODO("Not yet implemented")
+    }
+
     override fun visitRelStmt(relstmt: RelStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitDoBlock(doblock: DoBlock): String {
         TODO("Not yet implemented")
     }
 }

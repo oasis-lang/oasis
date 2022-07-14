@@ -1,6 +1,6 @@
 package me.snwy.oasis
 
-class OasisFunction(private val declaration: Func, val closure: Environment) : OasisCallable {
+class OasisFunction(@JvmField val declaration: Func, @JvmField val closure: Environment) : OasisCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         val environment = Environment(closure)
         if (arguments.size < arity()) throw RuntimeError(line, "Expected ${arity()} arguments, got ${arguments.size}")
