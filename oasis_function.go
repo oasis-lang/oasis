@@ -12,12 +12,15 @@ type OasisFunction struct {
 }
 
 func (f OasisFunction) Call(vm *VM, args []interface{}) interface{} {
-	var env = NewEnvironment(f.Closure)
-	for i, arg := range args {
-		env.Values[f.Args[i]] = arg
+	env := NewEnvironment(f.Closure)
+	for i := 0; i < len(f.Args); i++ {
+		env.Values[f.Args[i]] = args[i]
 	}
 	var fnVm = NewVM(f.Body, env, true)
 	fnVm.Run()
+	if fnVm.IteratorExhausted && vm != nil {
+		vm.IteratorExhausted = true
+	}
 	return fnVm.ReturnValue
 }
 
@@ -26,12 +29,12 @@ func (f OasisFunction) Arity() int {
 }
 
 type NativeFunction struct {
-	Fn   func(args []interface{}) interface{}
+	Fn   func(vm *VM, args []interface{}) interface{}
 	Args int
 }
 
 func (f *NativeFunction) Call(vm *VM, args []interface{}) interface{} {
-	return f.Fn(args)
+	return f.Fn(vm, args)
 }
 
 func (f *NativeFunction) Arity() int {

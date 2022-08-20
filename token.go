@@ -59,6 +59,8 @@ const (
 	Not
 	Or
 	Clone
+	Map
+	Item
 	Is
 	Const
 	Test

@@ -44,7 +44,7 @@ func (p *Parser) Eat(t TokenType) Token {
 		p.Pos++
 		return p.Tokens[p.Pos-1]
 	} else {
-		interpreter_error(fmt.Sprintf("Expected %s", t), p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
+		interpreterError(fmt.Sprintf("Expected %s, got %s", t, p.Peek().String()), p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
 	}
 	return Token{
 		Type:    Eof,
@@ -85,7 +85,7 @@ func (p *Parser) Factor() {
 		if err != nil {
 			var float, err = strconv.ParseFloat(number.Lexeme, 64)
 			if err != nil {
-				interpreter_error(fmt.Sprintf("Invalid number: %s", number.Lexeme), p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
+				interpreterError(fmt.Sprintf("Invalid number: %s", number.Lexeme), p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
 			}
 			p.Code = append(p.Code, Instruction{
 				Opcode: PushFloat,
@@ -141,8 +141,32 @@ func (p *Parser) Factor() {
 			Col2: len(tok.Lexeme) + tok.Column,
 		})
 	case LeftParen:
+		var createTupleIndex = len(p.Code)
 		p.Eat(LeftParen)
 		p.Expression()
+		if p.PeekType(Comma) {
+			i, err := insert(p.Code, createTupleIndex, Instruction{
+				Opcode: CreateTuple,
+				Args:   []interface{}{},
+			})
+			if err != nil {
+				interpreterError(err.Error(), p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
+			}
+			p.Code = append(i, Instruction{
+				Opcode: PushListItem,
+				Args:   []interface{}{},
+			})
+			for !p.PeekType(RightParen) {
+				p.Eat(Comma)
+				if !p.PeekType(RightParen) {
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: PushListItem,
+						Args:   []interface{}{},
+					})
+				}
+			}
+		}
 		p.Eat(RightParen)
 	case Nil:
 		var tok = p.Eat(Nil)
@@ -158,7 +182,11 @@ func (p *Parser) Factor() {
 	case Fn:
 		p.Fn()
 	case LeftBrace:
-		p.MapOrListComprehension()
+		p.ListComprehension()
+	case LeftBracket:
+		p.List()
+	case Map:
+		p.Map()
 	case Clone:
 		var tok = p.Eat(Clone)
 		p.Expression()
@@ -170,7 +198,7 @@ func (p *Parser) Factor() {
 			Col2:   len(tok.Lexeme) + tok.Column,
 		})
 	default:
-		interpreter_error("Unexpected token", p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
+		interpreterError("Unexpected token", p.Tokens[p.Pos].Line, p.Tokens[p.Pos].Column, p.Tokens[p.Pos].Column+len(p.Tokens[p.Pos].Lexeme))
 	}
 	if negated {
 		p.Code = append(p.Code, Instruction{
@@ -192,9 +220,123 @@ func (p *Parser) Factor() {
 	}
 }
 
+func (p *Parser) Comparison() {
+	p.Term2()
+	for p.PeekType(Greater) || p.PeekType(Less) {
+		var opType = p.Peek()
+		p.Eat(opType)
+		p.Term2()
+		switch opType {
+		case Greater:
+			p.Code = append(p.Code, Instruction{
+				Opcode: GreaterOp,
+				Args:   []interface{}{},
+				Line:   p.Tokens[p.Pos].Line,
+				Col1:   p.Tokens[p.Pos].Column,
+				Col2:   len(p.Tokens[p.Pos].Lexeme) + p.Tokens[p.Pos].Column,
+			})
+		case Less:
+			p.Code = append(p.Code, Instruction{
+				Opcode: LessOp,
+				Args:   []interface{}{},
+				Line:   p.Tokens[p.Pos].Line,
+				Col1:   p.Tokens[p.Pos].Column,
+				Col2:   len(p.Tokens[p.Pos].Lexeme) + p.Tokens[p.Pos].Column,
+			})
+		}
+	}
+}
+
+func (p *Parser) Equality() {
+	p.Comparison()
+	for p.PeekType(EqualEqual) || p.PeekType(BangEqual) || p.PeekType(LessEqual) || p.PeekType(GreaterEqual) {
+		var opType = p.Peek()
+		var op = p.Eat(opType)
+		p.Comparison()
+		switch opType {
+		case EqualEqual:
+			p.Code = append(p.Code, Instruction{
+				Opcode: EqualOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		case BangEqual:
+			p.Code = append(p.Code, Instruction{
+				Opcode: EqualOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+			p.Code = append(p.Code, Instruction{
+				Opcode: NotOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		case LessEqual:
+			p.Code = append(p.Code, Instruction{
+				Opcode: LessEqualOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		case GreaterEqual:
+			p.Code = append(p.Code, Instruction{
+				Opcode: GreaterEqualOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		}
+	}
+}
+
+func (p *Parser) Expression() {
+	p.Equality()
+	for p.PeekType(And) || p.PeekType(Or) || p.PeekType(Question) {
+		var opType = p.Peek()
+		var op = p.Eat(opType)
+		switch opType {
+		case And:
+			p.Equality()
+			p.Code = append(p.Code, Instruction{
+				Opcode: AndOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		case Or:
+			p.Equality()
+			p.Code = append(p.Code, Instruction{
+				Opcode: OrOp,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		case Question:
+			p.Equality()
+			p.Code = append(p.Code, Instruction{
+				Opcode: NullCoalesce,
+				Args:   []interface{}{},
+				Line:   op.Line,
+				Col1:   op.Column,
+				Col2:   len(op.Lexeme) + op.Column,
+			})
+		}
+	}
+}
+
 func (p *Parser) Term() {
 	p.Factor()
-	for p.PeekType(Star) || p.PeekType(Slash) || p.PeekType(Mod) || p.PeekType(And) {
+	for p.PeekType(Star) || p.PeekType(Slash) || p.PeekType(Mod) {
 		var opType = p.Peek()
 		var tok = p.Eat(opType)
 		p.Factor()
@@ -223,14 +365,6 @@ func (p *Parser) Term() {
 				Col1:   tok.Column,
 				Col2:   len(tok.Lexeme) + tok.Column,
 			})
-		case And:
-			p.Code = append(p.Code, Instruction{
-				Opcode: AndOp,
-				Args:   []interface{}{},
-				Line:   tok.Line,
-				Col1:   tok.Column,
-				Col2:   len(tok.Lexeme) + tok.Column,
-			})
 		}
 	}
 	if p.PeekType(LeftParen) {
@@ -254,11 +388,325 @@ func (p *Parser) Term() {
 			Col2:   len(p.Tokens[p.Pos].Lexeme) + p.Tokens[p.Pos].Column,
 		})
 	}
+	for p.PeekType(Colon) {
+		var tok = p.Eat(Colon)
+		if p.PeekType(LeftParen) {
+			p.Eat(LeftParen)
+			p.Expression()
+			p.Eat(RightParen)
+			if p.PeekType(Equal) || p.PeekType(PlusEqual) || p.PeekType(MinusEqual) || p.PeekType(StarEqual) || p.PeekType(SlashEqual) || p.PeekType(ModEqual) {
+				var opType = p.Peek()
+				var op = p.Eat(opType)
+				switch opType {
+				case Equal:
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case PlusEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Add,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case MinusEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Subtract,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case StarEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Multiply,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case SlashEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Divide,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case ModEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Modulo,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignIndex,
+						Args:   []interface{}{tok.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				}
+			} else {
+				p.Code = append(p.Code, Instruction{
+					Opcode: GetIndex,
+					Args:   []interface{}{},
+					Line:   tok.Line,
+					Col1:   tok.Column,
+					Col2:   len(tok.Lexeme) + tok.Column,
+				})
+				p.Code = append(p.Code, Instruction{
+					Opcode: Pop1,
+					Args:   []interface{}{},
+				})
+				p.Code = append(p.Code, Instruction{
+					Opcode: Pop1,
+					Args:   []interface{}{},
+				})
+			}
+		} else {
+			var name = p.Eat(Identifier)
+			if p.PeekType(Equal) || p.PeekType(PlusEqual) || p.PeekType(MinusEqual) || p.PeekType(StarEqual) || p.PeekType(SlashEqual) || p.PeekType(ModEqual) {
+				var opType = p.Peek()
+				var op = p.Eat(opType)
+				switch opType {
+				case Equal:
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case PlusEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: Dup,
+						Args:   []interface{}{},
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Add,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case MinusEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: Dup,
+						Args:   []interface{}{},
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Subtract,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case StarEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: Dup,
+						Args:   []interface{}{},
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Multiply,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case SlashEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: Dup,
+						Args:   []interface{}{},
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Divide,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				case ModEqual:
+					p.Code = append(p.Code, Instruction{
+						Opcode: Dup,
+						Args:   []interface{}{},
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: GetProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Expression()
+					p.Code = append(p.Code, Instruction{
+						Opcode: Modulo,
+						Args:   []interface{}{},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+					p.Code = append(p.Code, Instruction{
+						Opcode: AssignProperty,
+						Args:   []interface{}{name.Lexeme},
+						Line:   op.Line,
+						Col1:   op.Column,
+						Col2:   len(op.Lexeme) + op.Column,
+					})
+				}
+			} else {
+				p.Code = append(p.Code, Instruction{
+					Opcode: GetProperty,
+					Args:   []interface{}{name.Lexeme},
+					Line:   name.Line,
+					Col1:   name.Column,
+					Col2:   len(name.Lexeme) + name.Column,
+				})
+			}
+		}
+	}
 }
 
-func (p *Parser) Expression() {
+func (p *Parser) Term2() {
 	p.Term()
-	for p.PeekType(Plus) || p.PeekType(Minus) || p.PeekType(Or) {
+	for p.PeekType(Plus) || p.PeekType(Minus) {
 		var opType = p.Peek()
 		var tok = p.Eat(opType)
 		p.Term()
@@ -326,14 +774,10 @@ func (p *Parser) Statement() {
 		p.While()
 	case Is:
 		p.Is()
-	case Test:
-		p.Test()
 	case Break:
 		p.Break()
 	case Continue:
 		p.Continue()
-	case Rel:
-		p.Rel()
 	case Begin:
 		p.Begin()
 	default:
@@ -436,8 +880,53 @@ func (p *Parser) Fn() {
 	}
 }
 
-func (p *Parser) MapOrListComprehension() {
-
+func (p *Parser) Map() {
+	var tok = p.Eat(Map)
+	p.Code = append(p.Code, Instruction{
+		Opcode: CreateMap,
+		Args:   []interface{}{},
+		Line:   tok.Line,
+		Col1:   tok.Column,
+		Col2:   len(tok.Lexeme) + tok.Column,
+	})
+	p.Eat(LeftBrace)
+	if !p.PeekType(RightBrace) {
+		var str = p.Eat(String)
+		p.Code = append(p.Code, Instruction{
+			Opcode: PushString,
+			Args:   []interface{}{str.Literal},
+			Line:   str.Line,
+			Col1:   str.Column,
+			Col2:   len(str.Lexeme) + str.Column,
+		})
+		p.Eat(Colon)
+		p.Expression()
+		p.Code = append(p.Code, Instruction{
+			Opcode: PushMapItem,
+			Args:   []interface{}{},
+			Line:   str.Line,
+			Col1:   str.Column,
+			Col2:   len(str.Lexeme) + str.Column,
+		})
+		for p.PeekType(Comma) {
+			p.Eat(Comma)
+			var str = p.Eat(String)
+			p.Code = append(p.Code, Instruction{
+				Opcode: PushString,
+				Args:   []interface{}{str.Literal},
+				Line:   str.Line,
+				Col1:   str.Column,
+				Col2:   len(str.Lexeme) + str.Column,
+			})
+			p.Eat(Colon)
+			p.Expression()
+			p.Code = append(p.Code, Instruction{
+				Opcode: PushMapItem,
+				Args:   []interface{}{},
+			})
+		}
+	}
+	p.Eat(RightBrace)
 }
 
 func (p *Parser) While() {
@@ -586,21 +1075,250 @@ func (p *Parser) Continue() {
 }
 
 func (p *Parser) For() {
-
+	p.Depth++
+	p.Code = append(p.Code, Instruction{
+		Opcode: PushScope,
+		Args:   []interface{}{},
+	})
+	var loopStart = len(p.Code)
+	var tok = p.Eat(For)
+	if p.PeekType(Item) {
+		p.Eat(Item)
+		var name = p.Eat(Identifier)
+		p.Eat(In)
+		p.Expression()
+		p.Code = append(p.Code, Instruction{
+			Opcode: PushNil,
+			Args:   []interface{}{},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: DefineVariable,
+			Args:   []interface{}{name.Lexeme},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: CreateIterator,
+			Args:   []interface{}{},
+		})
+		var jumpIndex = len(p.Code)
+		p.Code = append(p.Code, Instruction{
+			Opcode: IsIteratorExhausted,
+			Args:   []interface{}{},
+		})
+		var exitIndex = len(p.Code)
+		p.Code = append(p.Code, Instruction{
+			Opcode: JumpIf,
+			Args:   []interface{}{0},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: Next,
+			Args:   []interface{}{},
+			Line:   tok.Line,
+			Col1:   tok.Column,
+			Col2:   len(tok.Lexeme) + tok.Column,
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: AssignVariable,
+			Args:   []interface{}{name.Lexeme},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: SetMarker,
+			Args:   []interface{}{p.Depth},
+		})
+		for !p.PeekType(End) {
+			p.Statement()
+		}
+		p.Code = append(p.Code, Instruction{
+			Opcode: PopMarker,
+			Args:   []interface{}{p.Depth},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: Jump,
+			Args:   []interface{}{jumpIndex - len(p.Code)},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: Pop,
+			Args:   []interface{}{},
+		})
+		p.Eat(End)
+		p.Code[exitIndex].Args[0] = len(p.Code) - exitIndex - 1
+	} else {
+		p.Statement()
+		p.Eat(Pipe)
+		var condIndex = len(p.Code)
+		p.Expression()
+		p.Eat(Pipe)
+		p.Code = append(p.Code, Instruction{
+			Opcode: JumpIfFalse,
+			Args:   []interface{}{0},
+		})
+		var jumpIntoLoop = len(p.Code)
+		p.Code = append(p.Code, Instruction{
+			Opcode: Jump,
+			Args:   []interface{}{0},
+		})
+		var iterIndex = len(p.Code)
+		p.Statement()
+		p.Code = append(p.Code, Instruction{
+			Opcode: Jump,
+			Args:   []interface{}{condIndex - len(p.Code)},
+		})
+		var bodyStart = len(p.Code)
+		p.Code[jumpIntoLoop].Args[0] = bodyStart - jumpIntoLoop
+		for !p.PeekType(End) {
+			p.Statement()
+		}
+		p.Code = append(p.Code, Instruction{
+			Opcode: Jump,
+			Args:   []interface{}{iterIndex - len(p.Code)},
+		})
+		p.Code[iterIndex].Args[0] = len(p.Code) - iterIndex
+		p.Eat(End)
+	}
+	var loopEnd = len(p.Code)
+	p.Code = append(p.Code, Instruction{
+		Opcode: PopScope,
+		Args:   []interface{}{},
+	})
+	for i, instruction := range p.Code[loopStart:loopEnd] {
+		i += loopStart // adjust for the offset of the loop start
+		if instruction.Opcode == BreakOp && instruction.Args[0] == p.Depth {
+			p.Code[i] = Instruction{
+				Opcode: Jump,
+				Args: []interface{}{
+					loopEnd - i,
+				},
+				Line: instruction.Line,
+				Col1: instruction.Col1,
+				Col2: instruction.Col2,
+			}
+		} else if instruction.Opcode == ContinueOp && instruction.Args[0] == p.Depth {
+			p.Code[i] = Instruction{
+				Opcode: Jump,
+				Args: []interface{}{
+					loopStart - i,
+				},
+				Line: instruction.Line,
+				Col1: instruction.Col1,
+				Col2: instruction.Col2,
+			}
+		}
+	}
+	p.Depth--
 }
 
 func (p *Parser) Is() {
-
-}
-
-func (p *Parser) Test() {
-
-}
-
-func (p *Parser) Rel() {
-
+	p.Eat(Is)
+	p.Expression()
+	var endJumpIndexes = []int{}
+	var loopStart = len(p.Code)
+	for !p.PeekType(Else) || p.PeekType(End) {
+		p.Code = append(p.Code, Instruction{
+			Opcode: Dup,
+			Args:   []interface{}{},
+		})
+		p.Expression()
+		p.Code = append(p.Code, Instruction{
+			Opcode: EqualOp,
+			Args:   []interface{}{},
+		})
+		p.Eat(LambdaArrow)
+		var jumpIndex = len(p.Code)
+		p.Code = append(p.Code, Instruction{
+			Opcode: JumpIfFalse,
+			Args:   []interface{}{0},
+		})
+		p.Code = append(p.Code, Instruction{
+			Opcode: Pop,
+			Args:   []interface{}{},
+		})
+		for !p.PeekType(End) {
+			p.Statement()
+		}
+		p.Eat(End)
+		endJumpIndexes = append(endJumpIndexes, len(p.Code))
+		p.Code = append(p.Code, Instruction{
+			Opcode: Jump,
+			Args:   []interface{}{0},
+		})
+		p.Code[jumpIndex].Args[0] = len(p.Code) - jumpIndex
+	}
+	if p.PeekType(Else) {
+		p.Eat(Else)
+		p.Code = append(p.Code, Instruction{
+			Opcode: Pop,
+			Args:   []interface{}{},
+		})
+		for !p.PeekType(End) {
+			p.Statement()
+		}
+		p.Eat(End)
+	}
+	p.Eat(End)
+	for i, instruction := range p.Code[loopStart:] {
+		i += loopStart // adjust for the offset of the loop start
+		if instruction.Opcode == Jump && instruction.Args[0] == 0 {
+			p.Code[i].Args[0] = len(p.Code) - i
+		}
+	}
 }
 
 func (p *Parser) Begin() {
+	p.Eat(Begin)
+	p.Code = append(p.Code, Instruction{
+		Opcode: PushScope,
+		Args:   []interface{}{},
+	})
+	for !p.PeekType(End) {
+		p.Statement()
+	}
+	p.Code = append(p.Code, Instruction{
+		Opcode: PopScope,
+		Args:   []interface{}{},
+	})
+	p.Eat(End)
+}
 
+func (p *Parser) ListComprehension() {
+	var start = p.Eat(LeftBrace)
+	p.Expression()
+	p.Eat(Of)
+	p.Expression()
+	var end = p.Eat(RightBrace)
+	p.Code = append(p.Code, Instruction{
+		Opcode: MapFn,
+		Args:   []interface{}{},
+		Line:   start.Line,
+		Col1:   start.Column,
+		Col2:   end.Column,
+	})
+}
+
+func (p *Parser) List() {
+	var start = p.Eat(LeftBracket)
+	p.Code = append(p.Code, Instruction{
+		Opcode: CreateList,
+		Args:   []interface{}{},
+		Line:   start.Line,
+		Col1:   start.Column,
+		Col2:   start.Column + len(start.Lexeme),
+	})
+	if !p.PeekType(RightBracket) {
+		p.Expression()
+		p.Code = append(p.Code, Instruction{
+			Opcode: PushListItem,
+			Args:   []interface{}{},
+		})
+		for !p.PeekType(RightBracket) {
+			p.Eat(Comma)
+			p.Expression()
+			p.Code = append(p.Code, Instruction{
+				Opcode: PushListItem,
+				Args:   []interface{}{},
+			})
+		}
+	}
+	if p.PeekType(Comma) {
+		p.Eat(Comma)
+	}
+	p.Eat(RightBracket)
 }

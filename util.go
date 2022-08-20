@@ -1,11 +1,20 @@
 package main
 
-import "reflect"
+import (
+	"errors"
+)
 
-func ReverseSlice(s interface{}) {
-	size := reflect.ValueOf(s).Len()
-	swap := reflect.Swapper(s)
-	for i, j := 0, size-1; i < j; i, j = i+1, j-1 {
-		swap(i, j)
+func insert[T any](orig []T, index int, value T) ([]T, error) {
+	if index < 0 {
+		return nil, errors.New("Index cannot be less than 0")
 	}
+
+	if index >= len(orig) {
+		return append(orig, value), nil
+	}
+
+	orig = append(orig[:index+1], orig[index:]...)
+	orig[index] = value
+
+	return orig, nil
 }

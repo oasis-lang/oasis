@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-type Opcode int
+type Opcode int64
 
 //go:generate stringer -type=Opcode
 const (
@@ -47,14 +47,23 @@ const (
 	PushListItem
 	CreateTuple
 	CreateMap
+	CreateIterator
 	PushMapItem
 	MapFn
+	SetMarker
+	PopMarker
+	Next
+	IsIteratorExhausted
 	PushScope
 	PopScope
 	BreakOp
 	ContinueOp
 	EndProgram
 	Dup
+	Pop
+	Pop1
+	Pop2
+	NullCoalesce
 )
 
 type Instruction struct {

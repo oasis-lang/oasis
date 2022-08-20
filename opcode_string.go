@@ -49,19 +49,28 @@ func _() {
 	_ = x[PushListItem-38]
 	_ = x[CreateTuple-39]
 	_ = x[CreateMap-40]
-	_ = x[PushMapItem-41]
-	_ = x[MapFn-42]
-	_ = x[PushScope-43]
-	_ = x[PopScope-44]
-	_ = x[BreakOp-45]
-	_ = x[ContinueOp-46]
-	_ = x[EndProgram-47]
-	_ = x[Dup-48]
+	_ = x[CreateIterator-41]
+	_ = x[PushMapItem-42]
+	_ = x[MapFn-43]
+	_ = x[SetMarker-44]
+	_ = x[PopMarker-45]
+	_ = x[Next-46]
+	_ = x[IsIteratorExhausted-47]
+	_ = x[PushScope-48]
+	_ = x[PopScope-49]
+	_ = x[BreakOp-50]
+	_ = x[ContinueOp-51]
+	_ = x[EndProgram-52]
+	_ = x[Dup-53]
+	_ = x[Pop-54]
+	_ = x[Pop1-55]
+	_ = x[Pop2-56]
+	_ = x[NullCoalesce-57]
 }
 
-const _Opcode_name = "PushIntPushFloatPushBoolPushStringPushCharPushBytePushNilFetchVariableDefineVariableAssignVariableGetIndexGetPropertyAssignIndexAssignPropertyCallFunctionPushEmptyProtoMakeFunctionEndFunctionReturnOpJumpJumpIfJumpIfFalseEqualOpLessOpLessEqualOpGreaterOpGreaterEqualOpAddSubtractMultiplyDivideModuloNegateNotOpAndOpOrOpCloneOpCreateListPushListItemCreateTupleCreateMapPushMapItemMapFnPushScopePopScopeBreakOpContinueOpEndProgramDup"
+const _Opcode_name = "PushIntPushFloatPushBoolPushStringPushCharPushBytePushNilFetchVariableDefineVariableAssignVariableGetIndexGetPropertyAssignIndexAssignPropertyCallFunctionPushEmptyProtoMakeFunctionEndFunctionReturnOpJumpJumpIfJumpIfFalseEqualOpLessOpLessEqualOpGreaterOpGreaterEqualOpAddSubtractMultiplyDivideModuloNegateNotOpAndOpOrOpCloneOpCreateListPushListItemCreateTupleCreateMapCreateIteratorPushMapItemMapFnSetMarkerPopMarkerNextIsIteratorExhaustedPushScopePopScopeBreakOpContinueOpEndProgramDupPopPop1Pop2NullCoalesce"
 
-var _Opcode_index = [...]uint16{0, 7, 16, 24, 34, 42, 50, 57, 70, 84, 98, 106, 117, 128, 142, 154, 168, 180, 191, 199, 203, 209, 220, 227, 233, 244, 253, 267, 270, 278, 286, 292, 298, 304, 309, 314, 318, 325, 335, 347, 358, 367, 378, 383, 392, 400, 407, 417, 427, 430}
+var _Opcode_index = [...]uint16{0, 7, 16, 24, 34, 42, 50, 57, 70, 84, 98, 106, 117, 128, 142, 154, 168, 180, 191, 199, 203, 209, 220, 227, 233, 244, 253, 267, 270, 278, 286, 292, 298, 304, 309, 314, 318, 325, 335, 347, 358, 367, 381, 392, 397, 406, 415, 419, 438, 447, 455, 462, 472, 482, 485, 488, 492, 496, 508}
 
 func (i Opcode) String() string {
 	if i < 0 || i >= Opcode(len(_Opcode_index)-1) {

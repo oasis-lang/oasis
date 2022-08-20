@@ -5,7 +5,7 @@ package main
 import "strconv"
 
 func _() {
-	// An "invalid array index" compiler interpreter_error signifies that the constant values have changed.
+	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[LeftParen-0]
@@ -61,24 +61,26 @@ func _() {
 	_ = x[Not-50]
 	_ = x[Or-51]
 	_ = x[Clone-52]
-	_ = x[Is-53]
-	_ = x[Const-54]
-	_ = x[Test-55]
-	_ = x[Error-56]
-	_ = x[In-57]
-	_ = x[Break-58]
-	_ = x[Continue-59]
-	_ = x[Of-60]
-	_ = x[Rel-61]
-	_ = x[Begin-62]
-	_ = x[Until-63]
-	_ = x[Unless-64]
-	_ = x[Eof-65]
+	_ = x[Map-53]
+	_ = x[Item-54]
+	_ = x[Is-55]
+	_ = x[Const-56]
+	_ = x[Test-57]
+	_ = x[Error-58]
+	_ = x[In-59]
+	_ = x[Break-60]
+	_ = x[Continue-61]
+	_ = x[Of-62]
+	_ = x[Rel-63]
+	_ = x[Begin-64]
+	_ = x[Until-65]
+	_ = x[Unless-66]
+	_ = x[Eof-67]
 }
 
-const _TokenType_name = "LeftParenRightParenCommaColonMinusPlusSlashStarLeftBracketRightBracketLeftBraceRightBraceBangBangEqualPipeEqualEqualEqualGreaterGreaterEqualLessLessEqualModPlusEqualMinusEqualSlashEqualStarEqualModEqualRightPipeLeftPipeQuestionLambdaArrowIdentifierStringFloatIntCharByteLetProtoFnForIfNilReturnTrueFalseWhileEndElseAndNotOrCloneIsConstTestErrorInBreakContinueOfRelBeginUntilUnlessEof"
+const _TokenType_name = "LeftParenRightParenCommaColonMinusPlusSlashStarLeftBracketRightBracketLeftBraceRightBraceBangBangEqualPipeEqualEqualEqualGreaterGreaterEqualLessLessEqualModPlusEqualMinusEqualSlashEqualStarEqualModEqualRightPipeLeftPipeQuestionLambdaArrowIdentifierStringFloatIntCharByteLetProtoFnForIfNilReturnTrueFalseWhileEndElseAndNotOrCloneMapItemIsConstTestErrorInBreakContinueOfRelBeginUntilUnlessEof"
 
-var _TokenType_index = [...]uint16{0, 9, 19, 24, 29, 34, 38, 43, 47, 58, 70, 79, 89, 93, 102, 106, 111, 121, 128, 140, 144, 153, 156, 165, 175, 185, 194, 202, 211, 219, 227, 238, 248, 254, 259, 262, 266, 270, 273, 278, 280, 283, 285, 288, 294, 298, 303, 308, 311, 315, 318, 321, 323, 328, 330, 335, 339, 344, 346, 351, 359, 361, 364, 369, 374, 380, 383}
+var _TokenType_index = [...]uint16{0, 9, 19, 24, 29, 34, 38, 43, 47, 58, 70, 79, 89, 93, 102, 106, 111, 121, 128, 140, 144, 153, 156, 165, 175, 185, 194, 202, 211, 219, 227, 238, 248, 254, 259, 262, 266, 270, 273, 278, 280, 283, 285, 288, 294, 298, 303, 308, 311, 315, 318, 321, 323, 328, 331, 335, 337, 342, 346, 351, 353, 358, 366, 368, 371, 376, 381, 387, 390}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {

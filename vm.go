@@ -13,6 +13,7 @@ type VM struct {
 	Instructions      []Instruction
 	Environment       *OasisEnvironment
 	Stack             []interface{}
+	StackPointer      int
 	IP                int
 	ReturnValue       interface{}
 	JumpFlag          bool
@@ -22,13 +23,20 @@ type VM struct {
 }
 
 func NewVM(instructions []Instruction, env *OasisEnvironment, functionVM bool) *VM {
+	var stackSize = 0
+	if functionVM {
+		stackSize = 5
+	} else {
+		stackSize = 100
+	}
 	return &VM{
 		Instructions:      instructions,
 		Environment:       env,
-		Stack:             make([]interface{}, 0),
+		Stack:             make([]interface{}, 0, stackSize),
 		IP:                0,
+		StackPointer:      -1,
 		ReturnValue:       nil,
-		JumpFlag:          false,
+		JumpFlag:          true,
 		IteratorExhausted: false,
 		Finished:          false,
 		FunctionVM:        functionVM,
@@ -36,29 +44,33 @@ func NewVM(instructions []Instruction, env *OasisEnvironment, functionVM bool) *
 }
 
 func (vm *VM) Push(value interface{}) {
+	/* vm.StackPointer++
+	vm.Stack[vm.StackPointer] = value*/
 	vm.Stack = append(vm.Stack, value)
 }
 
 func (vm *VM) Pop() interface{} {
-	value := vm.Stack[len(vm.Stack)-1]
+	/*var value = vm.Stack[vm.StackPointer]
+	vm.StackPointer--
+	return value*/
+	var value = vm.Stack[len(vm.Stack)-1]
 	vm.Stack = vm.Stack[:len(vm.Stack)-1]
 	return value
 }
 
 func (vm *VM) Run() {
 	for !vm.Finished {
-		vm.Step()
+		if hadError {
+			return
+		}
+		if vm.JumpFlag {
+			vm.JumpFlag = false
+		} else {
+			vm.IP++
+		}
+		instruction := vm.Instructions[vm.IP]
+		vm.Execute(instruction)
 	}
-}
-
-func (vm *VM) Step() {
-	instruction := vm.Instructions[vm.IP]
-	if vm.JumpFlag {
-		vm.JumpFlag = false
-	} else {
-		vm.IP++
-	}
-	vm.Execute(instruction)
 }
 
 func (vm *VM) Execute(instruction Instruction) {
@@ -79,20 +91,19 @@ func (vm *VM) Execute(instruction Instruction) {
 		if value, err := vm.Environment.Get(instruction.Args[0].(string)); err == nil {
 			vm.Push(value)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case DefineVariable:
-		err := vm.Environment.DefineVariable(instruction.Args[0].(string), vm.Pop())
+		err := vm.Environment.DefineVariable(instruction.Args[0].(string), instruction.Args[1].(bool), vm.Pop())
 		if err != nil {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case AssignVariable:
 		var item = vm.Pop()
 		err := vm.Environment.Set(instruction.Args[0].(string), item)
 		if err != nil {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
-		vm.Push(item)
 	case GetIndex:
 		var index = vm.Pop()
 		var list = vm.Pop()
@@ -100,43 +111,51 @@ func (vm *VM) Execute(instruction Instruction) {
 		case OasisList:
 			if indexInt, ok := index.(int); ok {
 				if indexInt < 0 || indexInt >= len(*t) {
-					interpreter_error("Index out of bounds", instruction.Line, instruction.Col1, instruction.Col2)
+					interpreterError("Index out of bounds", instruction.Line, instruction.Col1, instruction.Col2)
 				}
+				vm.Push(list)
+				vm.Push(index)
 				vm.Push((*t)[indexInt])
 			} else {
-				interpreter_error("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		case OasisMap:
 			if indexString, ok := index.(string); ok {
 				if _, ok := t[indexString]; !ok {
-					interpreter_error("Index not found", instruction.Line, instruction.Col1, instruction.Col2)
+					interpreterError("Index not found", instruction.Line, instruction.Col1, instruction.Col2)
 				}
+				vm.Push(list)
+				vm.Push(index)
 				vm.Push(t[indexString])
 			} else {
-				interpreter_error("Index must be a string", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Index must be a string", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		case Tuple:
 			if indexInt, ok := index.(int); ok {
 				if indexInt < 0 || indexInt >= len(t.Values) {
-					interpreter_error("Index out of bounds", instruction.Line, instruction.Col1, instruction.Col2)
+					interpreterError("Index out of bounds", instruction.Line, instruction.Col1, instruction.Col2)
 				}
+				vm.Push(list)
+				vm.Push(index)
 				vm.Push(t.Values[indexInt])
 			} else {
-				interpreter_error("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		case *Prototype:
 			var fn, err = t.Get("__index")
 			if err != nil {
-				interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 			} else {
 				if fn, ok := fn.(OasisCallable); ok {
+					vm.Push(list)
+					vm.Push(index)
 					vm.Push(fn.Call(vm, []interface{}{index}))
 				} else {
-					interpreter_error("__index not a function", instruction.Line, instruction.Col1, instruction.Col2)
+					interpreterError("__index not a function", instruction.Line, instruction.Col1, instruction.Col2)
 				}
 			}
 		default:
-			interpreter_error("Indexing not supported", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Indexing not supported", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case GetProperty:
 		var object = vm.Pop()
@@ -144,13 +163,13 @@ func (vm *VM) Execute(instruction Instruction) {
 		case *Prototype:
 			var val, err = t.Get(instruction.Args[0].(string))
 			if err != nil {
-				interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 			} else {
 				vm.Push(val)
 			}
 		// TODO: Add support for other types
 		default:
-			interpreter_error("Property not supported", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Property not supported", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case AssignIndex:
 		var value = vm.Pop()
@@ -165,25 +184,25 @@ func (vm *VM) Execute(instruction Instruction) {
 					(*t)[indexInt] = value
 				}
 			} else {
-				interpreter_error("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Index must be an integer", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		case OasisMap:
 			if indexString, ok := index.(string); ok {
 				t[indexString] = value
 			} else {
-				interpreter_error("Index must be a string", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Index must be a string", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		case Tuple:
-			interpreter_error("Tuples are immutable", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Tuples are immutable", instruction.Line, instruction.Col1, instruction.Col2)
 		case *Prototype:
 			var fn, err = t.Get("__index")
 			if err != nil {
-				interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 			} else {
 				if fn, ok := fn.(OasisCallable); ok {
 					fn.Call(vm, []interface{}{index, value})
 				} else {
-					interpreter_error("__setIndex not a function", instruction.Line, instruction.Col1, instruction.Col2)
+					interpreterError("__setIndex not a function", instruction.Line, instruction.Col1, instruction.Col2)
 				}
 			}
 		}
@@ -194,25 +213,26 @@ func (vm *VM) Execute(instruction Instruction) {
 		case *Prototype:
 			t.Set(instruction.Args[0].(string), value)
 		default:
-			interpreter_error("Property assignment not supported", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Property assignment not supported", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case CallFunction:
 		var args []interface{}
 		if instruction.Args[0].(int) != 0 {
 			for i := 0; i < instruction.Args[0].(int); i++ {
-				args = append(args, vm.Pop())
+				args = append(args, nil)
+				copy(args[1:], args)
+				args[0] = vm.Pop()
 			}
 		}
-		ReverseSlice(args)
 		var fn = vm.Pop()
 		if callFn, ok := fn.(OasisCallable); ok {
 			if callFn.Arity() != instruction.Args[0].(int) {
-				interpreter_error("Function arity mismatch", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Function arity mismatch", instruction.Line, instruction.Col1, instruction.Col2)
 			} else {
 				vm.Push(callFn.Call(vm, args))
 			}
 		} else {
-			interpreter_error(fmt.Sprintf("Not a function %T", fn), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(fmt.Sprintf("Not a function %T", fn), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case PushEmptyProto:
 		var inherits *Prototype = nil
@@ -232,7 +252,8 @@ func (vm *VM) Execute(instruction Instruction) {
 		}
 		var level = 0
 		var index = 0
-		for i, instruction := range vm.Instructions[vm.IP:] {
+		for i, instruction := range vm.Instructions[vm.IP+1:] {
+			i += vm.IP
 			if instruction.Opcode == MakeFunction {
 				level++
 				function.Body = append(function.Body, instruction)
@@ -252,21 +273,21 @@ func (vm *VM) Execute(instruction Instruction) {
 		vm.Push(function)
 	case ReturnOp:
 		if !vm.FunctionVM {
-			interpreter_error("Return outside of function", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Return outside of function", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 		vm.ReturnValue = vm.Pop()
 		vm.Finished = true
 	case Jump:
-		vm.IP = instruction.Args[0].(int)
+		vm.IP += instruction.Args[0].(int)
 		vm.JumpFlag = true
 	case JumpIf:
-		if vm.Pop().(bool) {
-			vm.IP = instruction.Args[0].(int)
+		if vm.Truthy(vm.Pop()) {
+			vm.IP += instruction.Args[0].(int)
 			vm.JumpFlag = true
 		}
 	case JumpIfFalse:
-		if vm.Pop().(bool) == false {
-			vm.IP = instruction.Args[0].(int)
+		if !vm.Truthy(vm.Pop()) {
+			vm.IP += instruction.Args[0].(int)
 			vm.JumpFlag = true
 		}
 	case EqualOp:
@@ -296,7 +317,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		if err == nil {
 			vm.Push(add)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case Subtract:
 		var a = vm.Pop()
@@ -305,7 +326,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		if err == nil {
 			vm.Push(subtract)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case Multiply:
 		var a = vm.Pop()
@@ -314,7 +335,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		if err == nil {
 			vm.Push(multiply)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case Divide:
 		var a = vm.Pop()
@@ -323,7 +344,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		if err == nil {
 			vm.Push(divide)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case Modulo:
 		var a = vm.Pop()
@@ -332,7 +353,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		if err == nil {
 			vm.Push(modulo)
 		} else {
-			interpreter_error(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case Negate:
 		var a = vm.Pop()
@@ -342,7 +363,7 @@ func (vm *VM) Execute(instruction Instruction) {
 		case float64:
 			vm.Push(-a.(float64))
 		default:
-			interpreter_error("Negate not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("Negate not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 	case NotOp:
 		var a = vm.Pop()
@@ -361,15 +382,16 @@ func (vm *VM) Execute(instruction Instruction) {
 	case CreateList:
 		vm.Push(CreateOasisList([]interface{}{}))
 	case PushListItem:
-		var list = vm.Pop()
 		var item = vm.Pop()
+		var list = vm.Pop()
 		switch t := list.(type) {
 		case OasisList:
 			*t = append(*(list.(OasisList)), item)
 		case Tuple:
-			t.Values = append(list.(Tuple).Values, item)
+			t.Append(item)
+			list = t
 		default:
-			interpreter_error("!!INTERNAL!!PLEASE REPORT THIS AS BUG!! PushListItem not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("!!INTERNAL!!PLEASE REPORT THIS AS BUG!! PushListItem not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 		vm.Push(list)
 	case CreateTuple:
@@ -377,14 +399,14 @@ func (vm *VM) Execute(instruction Instruction) {
 	case CreateMap:
 		vm.Push(make(OasisMap))
 	case PushMapItem:
-		var mapObj = vm.Pop()
-		var key = vm.Pop()
 		var value = vm.Pop()
+		var key = vm.Pop()
+		var mapObj = vm.Pop()
 		switch t := mapObj.(type) {
 		case OasisMap:
 			t[key.(string)] = value
 		default:
-			interpreter_error("!!INTERNAL!!PLEASE REPORT THIS AS BUG!! PushMapItem not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
+			interpreterError("!!INTERNAL!!PLEASE REPORT THIS AS BUG!! PushMapItem not supported for this type", instruction.Line, instruction.Col1, instruction.Col2)
 		}
 		vm.Push(mapObj)
 	case MapFn:
@@ -416,9 +438,10 @@ func (vm *VM) Execute(instruction Instruction) {
 					}
 				}
 			default:
-				interpreter_error("Not an iterable object", instruction.Line, instruction.Col1, instruction.Col2)
+				interpreterError("Not an iterable object", instruction.Line, instruction.Col1, instruction.Col2)
 			}
 		}
+		vm.Push(result)
 	case PushScope:
 		vm.Environment = NewEnvironment(vm.Environment)
 	case PopScope:
@@ -429,7 +452,64 @@ func (vm *VM) Execute(instruction Instruction) {
 		var a = vm.Pop()
 		vm.Push(a)
 		vm.Push(a)
+	case CreateIterator:
+		var obj = vm.Pop()
+		vm.Push(NewOasisIterator(obj))
+	case Next:
+		var test = vm.Pop()
+		if iterator, ok := test.(OasisIterator); ok {
+			var err, result = iterator.Next(vm)
+			if err != nil {
+				interpreterError(err.Error(), instruction.Line, instruction.Col1, instruction.Col2)
+			} else {
+				if iterator.Exhausted {
+					vm.IteratorExhausted = true
+				}
+				vm.Push(iterator)
+				vm.Push(result)
+			}
+		} else {
+			interpreterError(fmt.Sprintf("Not an iterator %T", test), instruction.Line, instruction.Col1, instruction.Col2)
+		}
+	case IsIteratorExhausted:
+		vm.Push(vm.IteratorExhausted)
+		vm.IteratorExhausted = false
+	case SetMarker:
+		vm.Push(StackMarker{instruction.Args[0].(int)})
+	case PopMarker:
+		for {
+			var item = vm.Pop()
+			if marker, ok := item.(StackMarker); ok {
+				if marker.Value == instruction.Args[0].(int) {
+					break
+				}
+			}
+		}
+	case Pop:
+		vm.Pop()
+	case Pop1:
+		var a = vm.Pop()
+		vm.Pop()
+		vm.Push(a)
+	case Pop2:
+		var a = vm.Pop()
+		var b = vm.Pop()
+		vm.Pop()
+		vm.Push(a)
+		vm.Push(b)
+	case NullCoalesce:
+		var a = vm.Pop()
+		var b = vm.Pop()
+		if b == nil {
+			vm.Push(a)
+		} else {
+			vm.Push(b)
+		}
 	}
+}
+
+type StackMarker struct {
+	Value int
 }
 
 func CreateOasisList(values []interface{}) OasisList {

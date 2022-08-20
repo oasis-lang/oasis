@@ -20,34 +20,36 @@ func NewScanner(Input string) Scanner {
 		Line:   1,
 		Col:    1,
 		Keywords: map[string]TokenType{
-			"let":               Let,
-			"proto":             Proto,
-			"fn":                Fn,
-			"for":               For,
-			"if":                If,
-			"nil":               Nil,
-			"return":            Return,
-			"true":              True,
-			"false":             False,
-			"while":             While,
-			"end":               End,
-			"else":              Else,
-			"and":               And,
-			"not":               Not,
-			"or":                Or,
-			"clone":             Clone,
-			"is":                Is,
-			"const":             Const,
-			"test":              Test,
-			"interpreter_error": Error,
-			"in":                In,
-			"break":             Break,
-			"continue":          Continue,
-			"of":                Of,
-			"rel":               Rel,
-			"begin":             Begin,
-			"until":             Until,
-			"unless":            Unless,
+			"let":      Let,
+			"proto":    Proto,
+			"fn":       Fn,
+			"for":      For,
+			"if":       If,
+			"nil":      Nil,
+			"return":   Return,
+			"true":     True,
+			"false":    False,
+			"while":    While,
+			"end":      End,
+			"else":     Else,
+			"and":      And,
+			"not":      Not,
+			"or":       Or,
+			"clone":    Clone,
+			"is":       Is,
+			"const":    Const,
+			"test":     Test,
+			"error":    Error,
+			"dict":     Map,
+			"in":       In,
+			"break":    Break,
+			"continue": Continue,
+			"item":     Item,
+			"of":       Of,
+			"rel":      Rel,
+			"begin":    Begin,
+			"until":    Until,
+			"unless":   Unless,
 		},
 	}
 }
@@ -72,7 +74,7 @@ func (s *Scanner) Advance() byte {
 
 func (s *Scanner) AddToken(tokenType TokenType) {
 	var text = s.Source[s.Start:s.Pos]
-	s.Tokens = append(s.Tokens, Token{Type: tokenType, Lexeme: text, Line: s.Line, Column: s.Col, Literal: ""})
+	s.Tokens = append(s.Tokens, Token{Type: tokenType, Lexeme: text, Line: s.Line, Column: s.Col - len(text) - 1, Literal: ""})
 }
 
 func (s *Scanner) AddTokenLiteral(tokenType TokenType, literal string) {
@@ -190,7 +192,7 @@ func (s *Scanner) ScanToken() {
 			}
 			return
 		}
-		interpreter_error(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
+		interpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
 	case '|':
 		if s.Match('>') {
 			s.AddToken(RightPipe)
@@ -218,7 +220,7 @@ func (s *Scanner) ScanToken() {
 		} else if isNumeric(c) {
 			s.Number()
 		} else {
-			interpreter_error(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
+			interpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
 		}
 	}
 }
@@ -256,7 +258,7 @@ func (s *Scanner) Identifier() {
 func (s *Scanner) String() {
 	for !s.Match('"') {
 		if s.IsAtEnd() {
-			interpreter_error("Unterminated string", s.Line, s.Col, s.Col)
+			interpreterError("Unterminated string", s.Line, s.Col, s.Col)
 		}
 		s.Advance()
 	}
