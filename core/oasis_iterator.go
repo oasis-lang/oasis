@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"errors"
@@ -7,12 +7,12 @@ import (
 )
 
 type OasisIterator struct {
-	Source    interface{}
+	Source    any
 	Current   int
 	Exhausted bool
 }
 
-func NewOasisIterator(source interface{}) OasisIterator {
+func NewOasisIterator(source any) OasisIterator {
 	return OasisIterator{
 		Source:    source,
 		Current:   -1,
@@ -20,7 +20,7 @@ func NewOasisIterator(source interface{}) OasisIterator {
 	}
 }
 
-func (i *OasisIterator) Next(vm *VM) (error, interface{}) {
+func (i *OasisIterator) Next(vm *VM) (error, any) {
 	if i.Exhausted {
 		return errors.New("Iterator exhausted"), nil
 	}
@@ -38,7 +38,7 @@ func (i *OasisIterator) Next(vm *VM) (error, interface{}) {
 		var keys = reflect.ValueOf(i.Source).MapKeys()
 		var key = keys[i.Current].Interface()
 		var value = reflect.ValueOf(i.Source).MapIndex(reflect.ValueOf(key)).Interface()
-		return nil, CreateOasisTuple([]interface{}{key, value})
+		return nil, CreateOasisTuple([]any{key, value})
 	case Tuple:
 		if i.Current >= len(i.Source.(Tuple).Values)-1 {
 			i.Exhausted = true
@@ -48,8 +48,8 @@ func (i *OasisIterator) Next(vm *VM) (error, interface{}) {
 		if proto, ok := i.Source.(*Prototype); ok {
 			if fn, ok := proto.Get("__iter"); ok != nil {
 				if fn, ok := fn.(OasisCallable); ok {
-					var item = fn.Call(vm, []interface{}{i.Current})
-					if vm.IteratorExhausted {
+					var item = fn.Call(vm, []any{i.Current})
+					if item == nil {
 						i.Exhausted = true
 						return errors.New("Iterator exhausted"), nil
 					}
@@ -61,7 +61,7 @@ func (i *OasisIterator) Next(vm *VM) (error, interface{}) {
 	return errors.New("Invalid iterable"), nil
 }
 
-func (i *OasisIterator) CurrentValue() interface{} {
+func (i *OasisIterator) CurrentValue() any {
 	return reflect.ValueOf(i.Source).Index(i.Current).Interface()
 }
 

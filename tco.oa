@@ -1,0 +1,17 @@
+let even = fn(x)
+   if x == 0
+        return "even"
+   else
+        return odd(x - 1)
+   end
+end
+
+let odd = fn(x)
+   if x == 0
+        return "odd"
+   else
+        return even(x - 1)
+   end
+end
+
+io:print(even(10000001))

@@ -1,8 +1,8 @@
-package main
+package core
 
 import "fmt"
 
-type Opcode int64
+type Opcode uint8
 
 //go:generate stringer -type=Opcode
 const (
@@ -64,11 +64,17 @@ const (
 	Pop1
 	Pop2
 	NullCoalesce
+	TailCall
+	SpawnFunction
+	SendOp
+	RecvOp
+	ExportOp
+	LastInstruction // never use - needed for getting the maximum index
 )
 
 type Instruction struct {
 	Opcode Opcode
-	Args   []interface{}
+	Args   []any
 	Line   int
 	Col1   int
 	Col2   int

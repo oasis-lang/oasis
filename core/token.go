@@ -1,4 +1,4 @@
-package main
+package core
 
 import "fmt"
 
@@ -59,17 +59,18 @@ const (
 	Not
 	Or
 	Clone
+	Spawn
+	Send
+	Recv
+	Export
 	Map
 	Item
 	Is
 	Const
-	Test
-	Error
 	In
 	Break
 	Continue
 	Of
-	Rel
 	Begin
 	Until
 	Unless

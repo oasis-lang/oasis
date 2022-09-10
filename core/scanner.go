@@ -1,6 +1,10 @@
-package main
+package core
 
-import "fmt"
+import (
+	"fmt"
+	"oasisgo/desktop"
+	"strings"
+)
 
 type Scanner struct {
 	Source   string
@@ -35,26 +39,32 @@ func NewScanner(Input string) Scanner {
 			"and":      And,
 			"not":      Not,
 			"or":       Or,
-			"clone":    Clone,
+			"new":      Clone,
 			"is":       Is,
 			"const":    Const,
-			"test":     Test,
-			"error":    Error,
 			"dict":     Map,
 			"in":       In,
 			"break":    Break,
 			"continue": Continue,
 			"item":     Item,
 			"of":       Of,
-			"rel":      Rel,
 			"begin":    Begin,
 			"until":    Until,
 			"unless":   Unless,
+			"spawn":    Spawn,
+			"send":     Send,
+			"recv":     Recv,
+			"export":   Export,
 		},
 	}
 }
 
 func (s *Scanner) Scan() {
+	defer func() {
+		if r := recover(); r != "InterpreterError" && r != nil {
+			panic(r)
+		}
+	}()
 	for !s.IsAtEnd() {
 		s.ScanToken()
 		s.Start = s.Pos
@@ -192,7 +202,7 @@ func (s *Scanner) ScanToken() {
 			}
 			return
 		}
-		interpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
+		desktop.InterpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
 	case '|':
 		if s.Match('>') {
 			s.AddToken(RightPipe)
@@ -220,7 +230,7 @@ func (s *Scanner) ScanToken() {
 		} else if isNumeric(c) {
 			s.Number()
 		} else {
-			interpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
+			desktop.InterpreterError(fmt.Sprintf("Invalid character %c", c), s.Line, s.Col, s.Col)
 		}
 	}
 }
@@ -257,12 +267,20 @@ func (s *Scanner) Identifier() {
 
 func (s *Scanner) String() {
 	for !s.Match('"') {
+		s.Match('\\')
 		if s.IsAtEnd() {
-			interpreterError("Unterminated string", s.Line, s.Col, s.Col)
+			desktop.InterpreterError("Unterminated string", s.Line, s.Col, s.Col)
 		}
 		s.Advance()
 	}
-	s.AddTokenLiteral(String, s.Source[s.Start+1:s.Pos-1])
+	str := s.Source[s.Start+1 : s.Pos-1]
+	str = strings.Replace(str, "\\n", "\n", -1)
+	str = strings.Replace(str, "\\t", "\t", -1)
+	str = strings.Replace(str, "\\r", "\r", -1)
+	str = strings.Replace(str, "\\\"", "\"", -1)
+	str = strings.Replace(str, "\\\\", "\\", -1)
+	str = strings.Replace(str, "\\0", "\000", -1)
+	s.AddTokenLiteral(String, str)
 }
 
 func (s *Scanner) Char() {
