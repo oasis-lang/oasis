@@ -21,7 +21,12 @@ func (Sys) Create(vm *core.VM) (string, any) {
 			},
 			"resultOf": &core.NativeFunction{
 				Fn: func(vm *core.VM, args []any) any {
-					out, err := exec.Command(args[0].(string), args[1].([]string)...).Output()
+					argsL := args[0].(core.OasisList)
+					argsStr := make([]string, len(args))
+					for i, arg := range *argsL {
+						argsStr[i] = arg.(string)
+					}
+					out, err := exec.Command(args[0].(string), argsStr...).Output()
 					if err != nil {
 						return CreateResult(vm, nil, true, err.Error())
 					}
