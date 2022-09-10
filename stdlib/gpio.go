@@ -34,6 +34,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 			"pin": &core.NativeFunction{
 				Fn: func(vm *core.VM, args []any) any {
 					pin := rpio.Pin(args[0].(int))
+					var freq int
 					return &core.Prototype{
 						Inherited: &core.BasePrototype,
 						Body: map[string]any{
@@ -97,16 +98,19 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 							"freq": &core.NativeFunction{
 								Fn: func(vm *core.VM, args []any) any {
 									pin.Freq(args[0].(int))
+									freq = args[0].(int)
 									return nil
 								},
 								Args: 1,
 							},
 							"dutyCycle": &core.NativeFunction{
 								Fn: func(vm *core.VM, args []any) any {
-									pin.DutyCycle(uint32(args[0].(int)), uint32(args[1].(int)))
+									// calculate duty cycle from percentage
+									dutyCycle := uint32(args[0].(int)) * uint32(freq) / 100
+									pin.DutyCycle(dutyCycle, uint32(freq))
 									return nil
 								},
-								Args: 2,
+								Args: 1,
 							},
 							"toggle": &core.NativeFunction{
 								Fn: func(vm *core.VM, args []any) any {
