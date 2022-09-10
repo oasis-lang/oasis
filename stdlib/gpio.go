@@ -164,7 +164,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 						[]gobot.Connection{r},
 						devices,
 						func() {
-							select {}
+							args[1].(core.OasisCallable).Call(vm, []any{})
 						},
 					)
 					return &core.Prototype{
