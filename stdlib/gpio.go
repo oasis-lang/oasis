@@ -143,7 +143,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 			},
 			"create": &core.NativeFunction{
 				Fn: func(vm *core.VM, args []any) any {
-					devicesRaw := args[1].(core.OasisList)
+					devicesRaw := args[0].(core.OasisList)
 					devices := make([]gobot.Device, len(*devicesRaw))
 					for i, deviceRaw := range *devicesRaw {
 						device, ok := deviceRaw.(*core.Prototype)
@@ -160,7 +160,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 						}
 						devices[i] = addToBotFn()
 					}
-					bot := gobot.NewRobot(args[0].(string),
+					bot := gobot.NewRobot("",
 						[]gobot.Connection{r},
 						devices,
 						func() {
@@ -194,7 +194,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 						},
 					}
 				},
-				Args: 2,
+				Args: 1,
 			},
 		},
 	}
