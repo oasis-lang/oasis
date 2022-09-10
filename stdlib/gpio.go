@@ -103,7 +103,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 							},
 							"dutyCycle": &core.NativeFunction{
 								Fn: func(vm *core.VM, args []any) any {
-									pin.DutyCycle(args[0].(uint32), args[1].(uint32))
+									pin.DutyCycle(uint32(args[0].(int)), uint32(args[1].(int)))
 									return nil
 								},
 								Args: 2,
