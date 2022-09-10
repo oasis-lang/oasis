@@ -11,7 +11,7 @@ type GPIO struct{}
 
 func (GPIO) Create(vm *core.VM) (string, any) {
 	r := raspi.NewAdaptor()
-	return "GPIO", &core.Prototype{
+	return "gpio", &core.Prototype{
 		Inherited: &core.BasePrototype,
 		Body: map[string]any{
 			"init": &core.NativeFunction{
