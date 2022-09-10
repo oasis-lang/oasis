@@ -21,7 +21,7 @@ func (Sys) Create(vm *core.VM) (string, any) {
 			},
 			"resultOf": &core.NativeFunction{
 				Fn: func(vm *core.VM, args []any) any {
-					argsL := args[0].(core.OasisList)
+					argsL := args[1].(core.OasisList)
 					argsStr := make([]string, len(args))
 					for i, arg := range *argsL {
 						argsStr[i] = arg.(string)
