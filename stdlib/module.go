@@ -27,6 +27,7 @@ var modules = []Module{
 	String{},
 	Len{},
 	JSON{},
+	GPIO{},
 }
 
 func PopulateAll(vm *core.VM) {
