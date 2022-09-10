@@ -193,6 +193,7 @@ func (GPIO) Create(vm *core.VM) (string, any) {
 						},
 					}
 				},
+				Args: 2,
 			},
 		},
 	}
